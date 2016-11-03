@@ -1,5 +1,5 @@
-{
-	"fileName": "/Volumes/HD-500GB/Users/nikolausn/Documents/msimsvn/msimrepo/Traffic_Violations.csv",
+{	
+	"fileName": "Traffic_Violations.csv",
 	"skipRow": 1,
 	"delimiter": ",",
 	"fields": [
@@ -59,12 +59,6 @@
 						"regex": "(O|B)",
 						"replace": "A"
 					}
-				},
-				{
-					"fname": "test",
-					"fcustom": true,
-					"file": "traffic-custom",
-					"module": "testFunction"
 				}
 			]
 		},
@@ -88,6 +82,19 @@
 						"replace": ""
 					}
 				}				
+			]
+		}
+	],
+	"vcleaning": [
+		{			
+			"field": "Arrest Type",
+			"operation": [
+				{
+					"fname": "vehicleSplit",
+					"fcustom": true,
+					"file": "traffic-custom",
+					"module": "vehicleSplit"
+				}
 			]
 		}
 	]

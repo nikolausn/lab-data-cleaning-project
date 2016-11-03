@@ -26,7 +26,7 @@ class DCValue:
         repattern = re.compile(pattern);
         tempvalue = self.value;
         self.value = re.sub(repattern,replace,self.value);
-        print('%s - %s' %(tempvalue,self.value))
+        #print('%s - %s' %(tempvalue,self.value))
     
     #collapse multiple whitespace
     def collapseWhiteSpace(self):
@@ -41,17 +41,14 @@ class DCValue:
         self.value = self.value.lower();
     
     #custom Function
-    def customFunction(self,custom,field,row):
-        custom(self,field,row);
-
-def customCommand(row):
-    return 0;
+    def customFunction(self,custom,field,row,rownum=None):
+        custom(self,field,row,rownum);
 
 class DCCommand:    
     def __init__(self,dcValue):
         self.dcValue = dcValue;
     
-    def command(self,cmdObject,row=None):
+    def command(self,cmdObject,row=None,rownum=None):
         fname = cmdObject['fname'];
         if(fname=='leftTrim'):
             self.dcValue.leftTrim();
@@ -75,7 +72,7 @@ class DCCommand:
                 module = __import__(cmdObject['file']);
                 customFunction = getattr(module, cmdObject['module']);
                 #customFunction(self.dcValue.value,'Color',row);
-                self.dcValue.customFunction(customFunction,field,row);
+                self.dcValue.customFunction(customFunction,field,row,rownum);
                                             
         return self.dcValue;       
                                
@@ -104,11 +101,18 @@ for i in range(1,jsonConfig['skipRow']):
 reader = csv.DictReader(dcFile, jsonConfig['fields'],delimiter=jsonConfig['delimiter']);
 i = 0;
 attrarr = [];
+
+#Build vertical set for vertical cleaning
+vcleaning = jsonConfig['vcleaning'];
+
+vlist = {};
+for vset in vcleaning:
+    vlist[vset['field']] = [];    
+
 for row in reader:
     #print("%i %s %s" %(i,row['Date Of Stop'],row['Time Of Stop']));
 #    print(jsonConfig['hcleaning'][0]['VehicleType'][0]);
-#    print("%s" %(cmd.command(jsonConfig['hcleaning'][0]['VehicleType'][0])).value);        
-    
+#    print("%s" %(cmd.command(jsonConfig['hcleaning'][0]['VehicleType'][0])).value);            
     #Do Horizontal cleaning
     hcleaning = jsonConfig['hcleaning'];
     for hcvalue in hcleaning:
@@ -119,15 +123,36 @@ for row in reader:
         for opvalue in hcvalue['operation']:
             dcCommand.command(opvalue,row);
         row[hcvalue['newField']] = dcField.value;
-        print(dcField.value);
+        #print(dcField.value);
     rowarr = [];
     for rowattr,rowval in row.items():
+        #add header information
+        #need to figur better way to do this
         if(i==0):
             attrarr.append(rowattr)
         rowarr.append(rowval);
+    #print header
     if(i==0):
-        writer.writerow(attrarr);    
+        writer.writerow(attrarr);
+    #print row data
     writer.writerow(rowarr);
-    i = i + 1;    
-    
+    #append vertical list
+    for attr,value in vlist.items():
+        value.append(row[attr]);            
+    #add counter
+    i = i + 1;
+
+#Do vertical cleaning (spliting etc)
+for vrow in vcleaning:
+    field = vrow['field'];
+    rownum = 0;
+    for vcvalue in vlist[field]:
+        #row[hcleaning[i]]['newField']] = row[field];
+        dcField = DCValue(vcvalue);
+        dcCommand = DCCommand(dcField);
+        for opvalue in vrow['operation']:
+            dcCommand.command(opvalue,vlist,rownum);
+        rownum = rownum + 1;
+
+print(vlist);
 print('rows: %s' %(i));
