@@ -1,4 +1,7 @@
 {
+	"fileName": "/Volumes/HD-500GB/Users/nikolausn/Documents/msimsvn/msimrepo/Traffic_Violations.csv",
+	"skipRow": 1,
+	"delimiter": ",",
 	"fields": [
 		"Date Of Stop",
 		"Time Of Stop",
@@ -37,8 +40,10 @@
 		"Geolocation"
 	],
 	"hcleaning": [
-		{
-			"VehicleType": [
+		{			
+			"field": "VehicleType",
+			"newField": "VehicleType1",
+			"operation": [
 				{
 					"fname": "trim"
 				},
@@ -51,14 +56,38 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "r'A'",
-						"replace": "B"
+						"regex": "(O|B)",
+						"replace": "A"
 					}
 				},
 				{
 					"fname": "test",
-					"fcustom": true					
+					"fcustom": true,
+					"file": "traffic-custom",
+					"module": "testFunction"
 				}
+			]
+		},
+		{			
+			"field": "Color",
+			"newField": "Color1",
+			"operation": [
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				},
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": ",",
+						"replace": ""
+					}
+				}				
 			]
 		}
 	]
