@@ -90,8 +90,8 @@ writer = csv.writer(open("test", 'w'))
 dcFile = open(jsonConfig['fileName'], 'r');
 #skip header
 i = 0;
-for i in range(1,jsonConfig['skipRow']):
-    dcFile.next();
+#for i in range(1,jsonConfig['skipRow']):
+next(dcFile);
 
 #i=0;
 #with dcFile as csvRow:
@@ -99,8 +99,8 @@ for i in range(1,jsonConfig['skipRow']):
 #    print("%i %s %s" %(i,row['Date Of Stop'],row['Time Of Stop']));    
 #    i = i + 1;
 reader = csv.DictReader(dcFile, jsonConfig['fields'],delimiter=jsonConfig['delimiter']);
-i = 0;
-attrarr = [];
+attrarr = jsonConfig['fields'].copy();
+#attrarr = [];
 
 #Build vertical set for vertical cleaning
 vcleaning = jsonConfig['vcleaning'];
@@ -109,6 +109,7 @@ vlist = {};
 for vset in vcleaning:
     vlist[vset['field']] = [];    
 
+i = 0;
 for row in reader:
     #print("%i %s %s" %(i,row['Date Of Stop'],row['Time Of Stop']));
 #    print(jsonConfig['hcleaning'][0]['VehicleType'][0]);
@@ -117,6 +118,8 @@ for row in reader:
     hcleaning = jsonConfig['hcleaning'];
     for hcvalue in hcleaning:
         field = hcvalue['field'];
+        if not field in attrarr:
+            attrarr.append(field);
         #row[hcleaning[i]]['newField']] = row[field];
         dcField = DCValue(row[field]);
         dcCommand = DCCommand(dcField);
@@ -125,12 +128,15 @@ for row in reader:
         row[hcvalue['newField']] = dcField.value;
         #print(dcField.value);
     rowarr = [];
-    for rowattr,rowval in row.items():
+#    for rowattr,rowval in row.items():
         #add header information
         #need to figur better way to do this
-        if(i==0):
-            attrarr.append(rowattr)
-        rowarr.append(rowval);
+#        if(i==0):
+#            attrarr.append(rowattr)
+#        rowarr.append(rowval);
+    #second approach, use attrarr
+    for attr in attrarr:
+        rowarr.append(row[attr]);
     #print header
     if(i==0):
         writer.writerow(attrarr);
@@ -153,6 +159,30 @@ for vrow in vcleaning:
         for opvalue in vrow['operation']:
             dcCommand.command(opvalue,vlist,rownum);
         rownum = rownum + 1;
+        
+#print(vlist);
+dcFile.close();
+dcFile = open("test", 'r');
+next(dcFile);
+writer = csv.writer(open("testtwo", 'w'));
+reader = csv.DictReader(dcFile, attrarr, delimiter=jsonConfig['delimiter']);
+vattrarr = attrarr.copy();
+i = 0;
+for row in reader:
+    for vattr in vlist.keys():        
+        if not vattr in vattrarr:
+            vattrarr.append(vattr);
+        if not vattr in attrarr:
+            print("%s %s" %(vattr,i))
+            row[vattr] = vlist[vattr][i];
+    #make new array row
+    rowarr = [];
+    #print header
+    if(i==0):
+        writer.writerow(vattrarr);    
+    for attr in vattrarr:
+        rowarr.append(row[attr]);    
+    writer.writerow(rowarr);
+    i = i + 1;
 
-print(vlist);
 print('rows: %s' %(i));

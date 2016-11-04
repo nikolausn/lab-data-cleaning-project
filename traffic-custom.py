@@ -14,6 +14,6 @@ def vehicleSplit(value,field,row,rownum):
             row["%s %s" % (field,i)] = [None] * len(row[field]);
         #row["%s %s" % (field,i)].append({'rownum': rownum, 'value': vehicleSplit});
         #print(row["%s %s" % (field,i)]);
-        row["%s %s" % (field,i)][rownum] = vehicleSplit;
+        row["%s %s" % (field,i)][rownum] = vehicleSplit.strip().rstrip();
         i=i+1
     #print(row);
