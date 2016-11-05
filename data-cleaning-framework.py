@@ -1,48 +1,9 @@
-#!/Volumes/HD-500GB/Users/nikolausn/Applications/anaconda/bin/python3.5
+#!/usr/local/bin/python
 import re;
 import csv;
 import json;
+import dcvalue;
 
-class DCValue:
-    'Data Cleaning value class, as a class template for any data cleaning default transform'    
-    def __init__(self,value,field="",row=None):
-        self.value = value;        
-    
-    #leftTrim
-    def leftTrim(self):
-        self.value = self.value.lstrip();
-    
-    #righTrim
-    def rightTrim(self):
-        self.value = self.value.rstrip();
-    
-    #trim
-    def trim(self):
-        self.leftTrim();
-        self.rightTrim();
-    
-    #regular expression cleanup / replace
-    def regexReplace(self,pattern,replace):
-        repattern = re.compile(pattern);
-        tempvalue = self.value;
-        self.value = re.sub(repattern,replace,self.value);
-        #print('%s - %s' %(tempvalue,self.value))
-    
-    #collapse multiple whitespace
-    def collapseWhiteSpace(self):
-        self.regexReplace('/\\s+/',' ');
-    
-    #toUpper
-    def toUpper(self):
-        self.value = self.value.upper();
-    
-    #toLower
-    def toLower(self):
-        self.value = self.value.lower();
-    
-    #custom Function
-    def customFunction(self,custom,field,row,rownum=None):
-        custom(self,field,row,rownum);
 
 class DCCommand:    
     def __init__(self,dcValue):
@@ -121,7 +82,7 @@ for row in reader:
         if not field in attrarr:
             attrarr.append(field);
         #row[hcleaning[i]]['newField']] = row[field];
-        dcField = DCValue(row[field]);
+        dcField = dcvalue.DCValue(row[field]);
         dcCommand = DCCommand(dcField);
         for opvalue in hcvalue['operation']:
             dcCommand.command(opvalue,row);
@@ -154,7 +115,7 @@ for vrow in vcleaning:
     rownum = 0;
     for vcvalue in vlist[field]:
         #row[hcleaning[i]]['newField']] = row[field];
-        dcField = DCValue(vcvalue);
+        dcField = dcvalue.DCValue(vcvalue);
         dcCommand = DCCommand(dcField);
         for opvalue in vrow['operation']:
             dcCommand.command(opvalue,vlist,rownum);
