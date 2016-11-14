@@ -1,5 +1,5 @@
 {	
-	"fileName": "Traffic_Violations.csv",
+	"fileName": "/Volumes/HD-500GB/Users/nikolausn/Documents/msimsvn/msimrepo/Traffic_Violations.csv",
 	"skipRow": 1,
 	"delimiter": ",",
 	"fields": [
@@ -41,9 +41,16 @@
 	],
 	"hcleaning": [
 		{			
-			"field": "VehicleType",
-			"newField": "VehicleType1",
+			"field": "Description",
+			"newField": "Description 1",
 			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*()),.]",
+						"replace": " "
+					}
+				},				
 				{
 					"fname": "trim"
 				},
@@ -52,20 +59,86 @@
 				},
 				{
 					"fname": "toUpper"
-				},
+				}
+			]
+		},
+		{			
+			"field": "Location",
+			"newField": "Location 1",
+			"operation": [
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "(O|B)",
-						"replace": "A"
+						"regex": "[\\[\\]*()),.]",
+						"replace": " "
 					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Make",
+			"newField": "Make 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*()),.-]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Model",
+			"newField": "Model 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*()),.?`]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
 				}
 			]
 		},
 		{			
 			"field": "Color",
-			"newField": "Color1",
+			"newField": "Color 1",
 			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*()),.?`]",
+						"replace": " "
+					}
+				},
 				{
 					"fname": "trim"
 				},
@@ -78,12 +151,34 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": ",",
+						"regex": "(N/A)",
 						"replace": ""
 					}
-				}				
+				}
 			]
-		}
+		},
+		{			
+			"field": "Charge",
+			"newField": "Charge 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[*]",
+						"replace": " "
+					}
+				},
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		}		
 	],
 	"vcleaning": [
 		{			
