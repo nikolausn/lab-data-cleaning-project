@@ -6,12 +6,14 @@ import dcvalue;
 import argparse;
 from optparse import OptionParser;
 import sys;
+import sqlite3;
+import os;
 
 class DCCommand:    
     def __init__(self,dcValue):
         self.dcValue = dcValue;
     
-    def command(self,cmdObject,row=None,rownum=None):
+    def command(self,cmdObject,row=None,rownum=None,field=None):
         fname = cmdObject['fname'];
         if(fname=='leftTrim'):
             self.dcValue.leftTrim();
@@ -54,10 +56,10 @@ class DCColumnCommand:
             row["%s %s" % (field,i)][rownum] = myvalue.trim().value;
             i=i+1    
 
-def runConfig():                               
+def runConfig(infile,outfile,dcConfig):                     
     #read jsonconfig file
     jsonConfig = {};
-    with open("data-cleaning-config.json") as json_file:
+    with open(dcConfig) as json_file:
         jsonConfig = json.load(json_file)
     
     #start data cleaning workflow
@@ -65,8 +67,8 @@ def runConfig():
     #fieldName = tuple(jsonConfig['fields']);
     #read csv file base on fields definition
     #open file
-    writer = csv.writer(open("test", 'w'))
-    dcFile = open(jsonConfig['fileName'], 'r');
+    writer = csv.writer(open(outfile, 'w'))
+    dcFile = open(infile, 'r');
     #skip header
     i = 0;
     #for i in range(1,jsonConfig['skipRow']):
@@ -129,43 +131,50 @@ def runConfig():
         i = i + 1;
     
     #Do vertical cleaning (spliting etc)
+    isVertical = False;
     for vrow in vcleaning:
         field = vrow['field'];
         rownum = 0;
         for vcvalue in vlist[field]:
             #row[hcleaning[i]]['newField']] = row[field];
+            isVertical = True;
             dcField = dcvalue.DCValue(vcvalue);
             dcCommand = DCCommand(dcField);
             for opvalue in vrow['operation']:
-                dcCommand.command(opvalue,vlist,rownum);
+                dcCommand.command(opvalue,vlist,rownum,field);
             rownum = rownum + 1;
             
     #print(vlist);
     dcFile.close();
-    dcFile = open("test", 'r');
-    next(dcFile);
-    writer = csv.writer(open("testtwo", 'w'));
-    reader = csv.DictReader(dcFile, attrarr, delimiter=jsonConfig['delimiter']);
-    vattrarr = attrarr.copy();
-    i = 0;
-    for row in reader:
-        for vattr in vlist.keys():        
-            if not vattr in vattrarr:
-                vattrarr.append(vattr);
-            if not vattr in attrarr:
-                #print("%s %s" %(vattr,i))
-                row[vattr] = vlist[vattr][i];
-        #make new array row
-        rowarr = [];
-        #print header
-        if(i==0):
-            writer.writerow(vattrarr);    
-        for attr in vattrarr:
-            rowarr.append(row[attr]);    
-        writer.writerow(rowarr);
-        i = i + 1;
     
-    print('rows: %s' %(i));
+    if isVertical:
+        #rename output file to temporary
+        os.rename(outfile, outfile+'.temp');    
+        dcFile = open(outfile+'.temp', 'r');
+        next(dcFile);
+        writer = csv.writer(open(outfile, 'w'));
+        reader = csv.DictReader(dcFile, attrarr, delimiter=jsonConfig['delimiter']);
+        vattrarr = attrarr.copy();
+        i = 0;
+        for row in reader:
+            for vattr in vlist.keys():        
+                if not vattr in vattrarr:
+                    vattrarr.append(vattr);
+                if not vattr in attrarr:
+                    #print("%s %s" %(vattr,i))
+                    row[vattr] = vlist[vattr][i];
+            #make new array row
+            rowarr = [];
+            #print header
+            if(i==0):
+                writer.writerow(vattrarr);    
+            for attr in vattrarr:
+                rowarr.append(row[attr]);    
+            writer.writerow(rowarr);
+            i = i + 1;
+        os.remove(outfile+'.temp');
+    
+#    print('rows: %s' %(i));
 
 def groupColumn(groupArr,row,groupResult):
     for group in groupArr:
@@ -311,11 +320,21 @@ def main(argv):
 #    parser.add_argument('-o','--outfile',
 #                        help='file output from selecting columns');
     subparsers = parser.add_subparsers(help='sub-command help')
+    
+    #group
+    parser_init = subparsers.add_parser('init', help='group and count predefined fields, file output will be determined by column name') 
+    parser_init.add_argument('-c','--config',
+                        help='config file for cleaning');        
+    parser_init.add_argument('-in','--infile',
+                        help='input file to be cleaned');
+    parser_init.add_argument('-out','--outfile',
+                        help='output cleaned file');
+        
     # create the parser for the "hcleaning" command
     #group
     parser_group = subparsers.add_parser('group', help='group and count predefined fields, file output will be determined by column name')
     parser_group.add_argument('-in','--infile',
-                        help='file to clean');        
+                        help='file to be cleaned');        
     parser_group.add_argument('-f','--fields',
                         help='fields that one to be grouped');
 
@@ -397,10 +416,45 @@ def main(argv):
                         help='new cleaned field, if not define will be defiend automatically');
     parser_massedit.add_argument('-out','--outfile',
                         help='output cleaned file');
+
+    #load table sqlite
+    parser_loadtable = subparsers.add_parser('loadtable', help='Load csv file into sqlite database')
+    parser_loadtable.add_argument('-in','--infile',
+                        help='file to clean');        
+    parser_loadtable.add_argument('-out','--outfile',
+                        help='output sqlite file');
+    parser_loadtable.add_argument('-t','--tname',
+                        help='table name for loaded file');
+    parser_loadtable.add_argument('-a','--addition',
+                        help='if present, command will not create new table');
+
+    #run query sqlite
+    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
+    parser_runquery.add_argument('-in','--infile',
+                        help='file that contains sql query');        
+    parser_runquery.add_argument('-d','--database',
+                        help='sqlite3 database file');
+    parser_runquery.add_argument('-out','--outfile',
+                        help='if present, result of query will be present in csv file');
+
                         
     args = parser.parse_args(argv[1:]);
                 
     if len(argv)>1:
+        if argv[1]=='init':             
+            args = parser_init.parse_args(argv[2:]);
+            argobj = vars(args);
+            if (argobj['infile'] is not None) :
+                if (argobj['config'] is not None) :
+                    if (argobj['outfile'] is not None) :
+                        runConfig(argobj['infile'],argobj['outfile'] ,argobj['config'] );
+                    else:
+                        print("you must define output file with -out [select_outfile]");    
+                else:
+                    print('config file not defined, you must define config file using -c [config file]');
+            else:
+                print('infile not defined, you must define fields to be grouped using -in [file_name]');
+                
         if argv[1]=='group':             
             args = parser_group.parse_args(argv[2:]);
             argobj = vars(args);
@@ -612,7 +666,7 @@ def main(argv):
             else:
                 print('infile not defined, you must define fields to be cleaned using -in [file_name]');
         
-        #lower
+        #massedit
         if argv[1]=='massedit':
             args = parser_massedit.parse_args(argv[2:]);
             argobj = vars(args);            
@@ -676,6 +730,124 @@ def main(argv):
                     print("you must define fields to be cleaned using -f [fields]");
             else:
                 print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+
+        #loadtable
+        if argv[1]=='loadtable':
+            args = parser_loadtable.parse_args(argv[2:]);
+            argobj = vars(args);            
+            if (argobj['infile'] is not None) : 
+                if(argobj['tname'] is not None):
+                    tablename = argobj['tname'];                           
+                    readfile = openReadFile(argobj['infile'],',');
+                    header = readfile['header'].copy();
+                    #initialization for trim
+                    if (argobj['outfile'] is not None) :
+                        #open connection
+                        conn = sqlite3.connect(argobj['outfile']);
+                        #define cursor
+                        c = conn.cursor()
+                        createquery = "CREATE TABLE "+tablename+" (";
+                        insertquery = "INSERT INTO "+tablename+" VALUES (";
+                        for pos,item in enumerate(header):
+                            createquery = createquery + "'" + item + "'";                            
+                            insertquery = insertquery + "?";
+                            # add comma for before last item
+                            if(pos<len(header)-1):
+                                createquery = createquery + ",";
+                                insertquery = insertquery + ",";
+                        createquery = createquery + ")";
+                        insertquery = insertquery + ")";
+                        print(createquery);
+                        print(insertquery);
+                        if(argobj['addition'] is None):
+                            c.execute(createquery);
+                        #start fetching
+                        for row in readfile['rows']:                                                        
+                            temprow = [];
+                            for tempField in header:
+                                temprow.append(row[tempField]);
+                            c.execute(insertquery,temprow);
+                        conn.commit();                    
+                else:
+                    print("you must define output file with -out [select_outfile]");
+            else:
+                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+
+
+        #loadtable
+        if argv[1]=='runquery':
+            args = parser_runquery.parse_args(argv[2:]);
+            argobj = vars(args);            
+            if (argobj['infile'] is not None) : 
+                if(argobj['database'] is not None):
+                    #initialization for trim
+                    outfile = False;
+                    if (argobj['outfile'] is not None) :
+                        #open connection
+                        outfile = True;
+                        querywriter = openWriteFile(argobj['outfile']);
+
+                    conn = sqlite3.connect(argobj['database']);
+                    #define cursor
+                    csql = conn.cursor();
+                                                            
+                    with open(argobj['infile']) as f:
+                        endfile = False;
+                        while not endfile:
+                            query = "";
+                            c = f.read(1);
+                            if not c:
+                                endfile = True;
+                                break;                          
+                            query = query + c;
+                            endquery = False;
+                            while not endquery and not endfile:
+                                c = f.read(1);
+                                if not c:
+                                    endfile = True;
+                                    endquery = True;
+                                if c==';':
+                                    endquery = True;
+                                query = query + c;
+                            if(outfile):
+                                querywriter.writerow(["-------BEGIN EXECUTE QUERY-------"]);
+                                querywriter.writerow([query]); 
+                                querywriter.writerow(["-------RESULT EXECUTE QUERY-------"]);
+                            else:
+                                print("-------BEGIN EXECUTE QUERY-------");
+                                print(query);
+                                print("-------RESULT EXECUTE QUERY-------");
+                            result = csql.execute(query);
+                            if(csql.description is not None):
+                                names = list(map(lambda x: x[0], csql.description))
+                                if(outfile):
+                                    querywriter.writerow(names);
+                                else:
+                                    print(",".join(names));
+                                for row in result:
+                                    if(outfile):
+                                        querywriter.writerow(row);
+                                    else:
+                                        print(row);
+                            if(outfile):
+                                querywriter.writerow(["-------END EXECUTE QUERY-------"]);
+                            else:
+                                print("-------END EXECUTE QUERY-------");
+                            
+                else:
+                    print("you must define database file using -d [database file]");
+            else:
+                print('sqlfile not defined, you must define fields to be cleaned using -in [sqlfile]');
+
+    #run query sqlite
+    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
+    parser_runquery.add_argument('-in','--infile',
+                        help='file that contains sql query');        
+    parser_runquery.add_argument('-d','--database',
+                        help='sqlite3 database file');
+    parser_runquery.add_argument('-out','--output',
+                        help='if present, result of query will be present in csv file');
+
 
 #    print(vars(args));
 #    print(parser_a.parse_args(argv[1:]));
