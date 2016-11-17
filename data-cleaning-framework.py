@@ -320,8 +320,19 @@ def main(argv):
 #    parser.add_argument('-o','--outfile',
 #                        help='file output from selecting columns');
     subparsers = parser.add_subparsers(help='sub-command help')
+
+    #add_id
+    parser_id = subparsers.add_parser('id', help='gives id for a particular csv file') 
+    parser_id.add_argument('-in','--infile',
+                        help='input file to be cleaned');
+    parser_id.add_argument('-out','--outfile',
+                        help='output cleaned file');
+    parser_id.add_argument('-s','--startid',
+                        help='starting id, if it''s not stated then will start at 1');
+    parser_id.add_argument('-f','--field',
+                        help='field name for id, if not stated then field name will be ID');
     
-    #group
+    #init using framework config
     parser_init = subparsers.add_parser('init', help='group and count predefined fields, file output will be determined by column name') 
     parser_init.add_argument('-c','--config',
                         help='config file for cleaning');        
@@ -440,7 +451,38 @@ def main(argv):
                         
     args = parser.parse_args(argv[1:]);
                 
+                
     if len(argv)>1:
+        if argv[1]=='id':             
+            args = parser_id.parse_args(argv[2:]);
+            argobj = vars(args);
+            if (argobj['infile'] is not None) :
+                if (argobj['outfile'] is not None) :
+                    readfile = openReadFile(argobj['infile'],',');    
+                    idwriter = openWriteFile(argobj['outfile']);                                 
+                    start = 1;
+                    field = 'ID';
+                    if(argobj['startid'] is not None):
+                        start = argobj['startid'];
+                    if(argobj['field'] is not None):
+                        field = argobj['field'];
+                    header = readfile['header'];
+                    newheader = [field];
+                    newheader.extend(header);
+                    idwriter.writerow(newheader);
+                    for row in readfile['rows']:                
+                        #group column                
+                        row[field] = start;
+                        temparr = [];
+                        for tempfield in newheader:
+                            temparr.append(row[tempfield]);
+                        idwriter.writerow(temparr);
+                        start = start + 1;                                        
+                else:
+                    print("you must define output file with -out [select_outfile]");    
+            else:
+                print('infile not defined, you must define file input -in [file_name]');
+        
         if argv[1]=='init':             
             args = parser_init.parse_args(argv[2:]);
             argobj = vars(args);
@@ -704,7 +746,16 @@ def main(argv):
                                 for row in readfile['rows']:
                                     dcField = dcvalue.DCValue(row[field]);                                    
                                     #fetch massedit config
+                                    row[newfield]=row[field];                                    
                                     for edit in config['edits']:
+                                        #text must be the same
+                                        if(edit['from']==row[field]):
+                                            row[newfield]=row[field].replace(edit['from'],edit['to']);
+                                            #break the iteration because its match condition
+                                            break;
+                                        '''
+                                        Don't use regexrep anymore because of buggy replace when text
+                                        contains regular expressions character
                                         #pattern must exactly match
                                         pattern = '^('+edit['from'][0];
                                         # add aditional pattern
@@ -715,10 +766,11 @@ def main(argv):
                                                 i = i + 1;                                            
                                         # close pattern
                                         pattern = pattern +')$';
+                                        print(pattern);
                                         replace = edit['to'];
                                         dcField.regexReplace(pattern,replace);
                                         row[newfield]=dcField.value;
-                                    
+                                        '''                                    
                                     temprow = [];
                                     for tempField in header:
                                         temprow.append(row[tempField]);
@@ -727,7 +779,7 @@ def main(argv):
                     else:
                         print("you must define output file with -out [select_outfile]");
                 else:
-                    print("you must define fields to be cleaned using -f [fields]");
+                    print("you must define config file from openrefine using -c [config]");
             else:
                 print('infile not defined, you must define fields to be cleaned using -in [file_name]');
 
@@ -769,7 +821,7 @@ def main(argv):
                             c.execute(insertquery,temprow);
                         conn.commit();                    
                 else:
-                    print("you must define output file with -out [select_outfile]");
+                    print("you must define output file with -t [database file]");
             else:
                 print('infile not defined, you must define fields to be cleaned using -in [file_name]');
 
