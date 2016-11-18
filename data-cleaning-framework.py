@@ -8,12 +8,15 @@ from optparse import OptionParser;
 import sys;
 import sqlite3;
 import os;
+import time;
 
 class DCCommand:    
     def __init__(self,dcValue):
         self.dcValue = dcValue;
     
-    def command(self,cmdObject,row=None,rownum=None,field=None):
+    def command(self,cmdObject,row=None,rownum=None,field=None,rowid=None,logStream=None):
+        tempValue = self.dcValue.value;
+        
         fname = cmdObject['fname'];
         if(fname=='leftTrim'):
             self.dcValue.leftTrim();
@@ -34,11 +37,17 @@ class DCCommand:
         else:
             #check if it's custom function
             if (cmdObject['fcustom'] and not row is None):
+                fname = cmdObject['file']+'.'+cmdObject['module'];
                 module = __import__(cmdObject['file']);
                 customFunction = getattr(module, cmdObject['module']);
                 #customFunction(self.dcValue.value,'Color',row);
                 self.dcValue.customFunction(customFunction,field,row,rownum);
-                                            
+        
+        # print provenance log
+        if(rowid is not None and logStream is not None and tempValue!=self.dcValue.value):
+            tempRow = [rowid,field,time.strftime("%d/%m/%y %H:%M:%S"),fname,tempValue,self.dcValue.value];
+            logStream.writerow(tempRow);
+             
         return self.dcValue;      
         
 class DCColumnCommand:    
@@ -56,7 +65,12 @@ class DCColumnCommand:
             row["%s %s" % (field,i)][rownum] = myvalue.trim().value;
             i=i+1    
 
-def runConfig(infile,outfile,dcConfig):                     
+def runConfig(infile,outfile,dcConfig):
+    #make log stream for provenance
+    logstream = openWriteFile(outfile+'.'+time.strftime("%y%m%d%H%M%S")+'.log');
+    
+    logstream.writerow(['id','field','timestamp','function','oldval','newval']);
+                  
     #read jsonconfig file
     jsonConfig = {};
     with open(dcConfig) as json_file:
@@ -105,7 +119,7 @@ def runConfig(infile,outfile,dcConfig):
             dcField = dcvalue.DCValue(row[field]);
             dcCommand = DCCommand(dcField);
             for opvalue in hcvalue['operation']:
-                dcCommand.command(opvalue,row);
+                dcCommand.command(opvalue,row,field=field,rowid=i+1,logStream=logstream);
             row[hcvalue['newField']] = dcField.value;
             #print(row[hcvalue['newField']]);
             #print(dcField.value);
@@ -141,7 +155,7 @@ def runConfig(infile,outfile,dcConfig):
             dcField = dcvalue.DCValue(vcvalue);
             dcCommand = DCCommand(dcField);
             for opvalue in vrow['operation']:
-                dcCommand.command(opvalue,vlist,rownum,field);
+                dcCommand.command(opvalue,vlist,rownum,field,rowid=rownum+1,logStream=logstream);
             rownum = rownum + 1;
             
     #print(vlist);
@@ -819,9 +833,11 @@ def main(argv):
                             for tempField in header:
                                 temprow.append(row[tempField]);
                             c.execute(insertquery,temprow);
-                        conn.commit();                    
+                        conn.commit();  
+                    else:
+                        print("you must define output file with -o [database file]");                                    
                 else:
-                    print("you must define output file with -t [database file]");
+                    print("you must define table destination name with -t [table name]");
             else:
                 print('infile not defined, you must define fields to be cleaned using -in [file_name]');
 
