@@ -335,143 +335,377 @@ def main(argv):
 #                        help='file output from selecting columns');
     subparsers = parser.add_subparsers(help='sub-command help')
 
-    #add_id
-    parser_id = subparsers.add_parser('id', help='gives id for a particular csv file') 
-    parser_id.add_argument('-in','--infile',
-                        help='input file to be cleaned');
-    parser_id.add_argument('-out','--outfile',
-                        help='output cleaned file');
-    parser_id.add_argument('-s','--startid',
-                        help='starting id, if it''s not stated then will start at 1');
-    parser_id.add_argument('-f','--field',
-                        help='field name for id, if not stated then field name will be ID');
-    
-    #init using framework config
-    parser_init = subparsers.add_parser('init', help='group and count predefined fields, file output will be determined by column name') 
-    parser_init.add_argument('-c','--config',
-                        help='config file for cleaning');        
-    parser_init.add_argument('-in','--infile',
-                        help='input file to be cleaned');
-    parser_init.add_argument('-out','--outfile',
-                        help='output cleaned file');
-        
-    # create the parser for the "hcleaning" command
-    #group
-    parser_group = subparsers.add_parser('group', help='group and count predefined fields, file output will be determined by column name')
-    parser_group.add_argument('-in','--infile',
-                        help='file to be cleaned');        
-    parser_group.add_argument('-f','--fields',
-                        help='fields that one to be grouped');
+    commonIn = {
+                'param': '-in',
+                'longparam': '--infile',
+                'help': 'input file to be cleaned',
+                'required': True,
+                'message': 'infile is not defined, you must define file input -in [file_name]'
+            };
+    commonOut = {
+                'param': '-out',
+                'longparam': '--outfile',
+                'help': 'output cleaned file',
+                'required': True,
+                'message': 'you must define output file with -out [select_outfile]'
+            };
+    commonFields = {
+                'param': '-f',
+                'longparam': '--fields',
+                'help': 'field to be cleaned',
+                'required': True,
+                'message': 'fields not defined, you must define fields to be grouped using -f [fields]'
+            };
+            
+    parserArr = {
+        'id': {
+            'help': 'gives id for a particular csv file',
+            'argument': [ 
+                commonIn, 
+                commonOut,
+                {
+                    'param': '-s',
+                    'longparam': '--startid',
+                    'help': 'starting id, if it''s not stated then will start at 1',
+                    'required': False
+                },
+                {
+                    'param': '-f',
+                    'longparam': '--field',
+                    'help': 'field name for id, if it''s not stated then the field name will be ID',
+                    'required': False
+                }
+            ]
+        },
+        'init': {
+            'help': 'init cleaning tasks using config file',
+            'argument': [
+                commonIn,
+                commonOut,
+                {
+                    'param': '-c',
+                    'longparam': '--config',
+                    'help': 'config file for cleaning',
+                    'required': True,
+                    'message': 'config file not defined, you must define config file using -c [config file]'
+                }            
+            ]
+        },
+        'group': {
+            'help': 'group and count predefined fields, file output will be determined by column name',
+            'argument': [
+                commonIn,
+                commonFields          
+            ]
+        },
+        'merge': {
+            'help': 'merge distincted fields value in one file, file can be used as input for cluster and merging operation on openrefine',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'select': {
+            'help': 'select particular fields into new output file',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'regexrep': {
+            'help': 'replace pattern defined by regular expression to some value',
+            'argument': [
+                commonIn,
+                commonOut,
+                {
+                    'param': '-f',
+                    'longparam': '--field',
+                    'help': 'field to be cleaned',
+                    'required': True,
+                    'message': 'you must define field to replace with -f [field name]'
+                },
+                {
+                    'param': '-p',
+                    'longparam': '--pattern',
+                    'help': 'pattern to be searched by regex',
+                    'required': True,
+                    'message': 'you must define pattern to replace using -p [regex pattern]'
+                },
+                {
+                    'param': '-r',
+                    'longparam': '--replace',
+                    'help': 'replaced value',
+                    'required': True,
+                    'message': 'you must define output replace value with -r [replace value]'
+                },
+                {
+                    'param': '-nf',
+                    'longparam': '--newfield',
+                    'help': 'new field for replaced value, otherwise it will automatically create new field',
+                    'required': False
+                }
+            ]
+        },
+        'trim': {
+            'help': 'trim left and right particular fields, separate using comma',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'colspace': {
+            'help': 'colapse multiple white space for some fields',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'upper': {
+            'help':'upper case some fields',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'lower': {
+            'help': 'lower case some fields',
+            'argument': [
+                commonIn,
+                commonOut,
+                commonFields
+            ]
+        },
+        'massedit': {
+            'help': 'Reading mass edit from openrefine config for merging operation',
+            'argument': [
+                commonIn,
+                commonOut,
+                {
+                    'param': '-c',
+                    'longparam': '--config',
+                    'help': 'open refine json config file',
+                    'required': True,
+                    'message': 'you must define config file from openrefine using -c [config]'
+                },
+                {
+                    'param': '-nf',
+                    'longparam': '--newfield',
+                    'help': 'new field for replaced value, otherwise it will automatically create new field',
+                    'required': False
+                }
+            ]
+        },
+        'loadttable': {
+            'help': 'Load csv file into sqlite database',
+            'argument': [
+                commonIn,
+                commonOut,
+                {
+                    'param': '-t',
+                    'longparam': '--tname',
+                    'help': 'table name for loaded file',
+                    'required': True,
+                    'message': 'you must define table destination name with -t [table name]'
+                },
+                {
+                    'param': '-a',
+                    'longparam': '--addition',
+                    'help': 'if present, command will not create new table',
+                    'required': False
+                }
+            ]
+        },
+        'runquery': {
+            'help': 'Run Query to sqlite database defined -d --database',
+            'argument': [
+                {
+                    'param': '-in',
+                    'longparam': '--infile',
+                    'help': 'file that contains sql query',
+                    'required': True,
+                    'message': 'sqlfile not defined, you must define fields to be cleaned using -in [sqlfile]'
+                },
+                {
+                    'param': '-d',
+                    'longparam': '--database',
+                    'help': 'sqlite3 database file',
+                    'required': True,
+                    'message': 'you must define database file using -d [database file]'
+                },
+                {
+                    'param': '-out',
+                    'longparam': '--outfile',
+                    'help': 'if present, result of query will be present in csv file',
+                    'required': False
+                }
+            ]
+        }
+    }
 
-    #merge
-    parser_merge = subparsers.add_parser('merge', help='merge distincted fields value in one file, file can be used as input for cluster and merging operation on openrefine');
-    parser_merge.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_merge.add_argument('-f','--fields',
-                        help='fields that one to be grouped');
-    parser_merge.add_argument('-out','--outfile',
-                        help='output merge file');
+    #init parser
+    for myparskey,myparsval in parserArr.items():
+        myparsval['parser'] = subparsers.add_parser(myparskey,help = myparsval['help']);
+        for myargval in myparsval['argument']:
+            myparsval['parser'].add_argument(myargval['param'],myargval['longparam'],help=myargval['help']);
                         
-    #select
-    parser_select = subparsers.add_parser('select', help='select particular fields into new output file')
-    parser_select.add_argument('-in','--infile',
-                        help='file to clean');
-    parser_select.add_argument('-f','--fields',
-                        help='selected fields that want to be separated');
-    parser_select.add_argument('-out','--outfile', help='output file for select fields operation') 
-    
-    #regexreplace
-    parser_regex = subparsers.add_parser('regexrep', help='replace pattern defined by regular expression to some value')
-    parser_regex.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_regex.add_argument('-f','--field',
-                        help='field to replace');
-    parser_regex.add_argument('-p','--pattern',
-                        help='pattern to be searched by regex');
-    parser_regex.add_argument('-r','--replace',
-                        help='replaced value');
-    parser_regex.add_argument('-nf','--newfield',
-                        help='new field for replaced value, otherwise it will automatically create new field');
-    parser_regex.add_argument('-out','--outfile',
-                        help='output file for replaced value');
-    
-    #trim
-    parser_trim = subparsers.add_parser('trim', help='trim left and right particular fields, separate using comma')
-    parser_trim.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_trim.add_argument('-f','--fields',
-                        help='fields to clean, separate multi field using comma');
-    parser_trim.add_argument('-out','--outfile',
-                        help='output file for replaced value');
-    
-    #parser collapse space
-    parser_colspace = subparsers.add_parser('colspace', help='colapse multiple white space for some fields')
-    parser_colspace.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_colspace.add_argument('-f','--fields',
-                        help='fields to clean, separate multi field using comma');
-    parser_colspace.add_argument('-out','--outfile',
-                        help='output file for replaced value');
 
-    #parser toupper
-    parser_upper = subparsers.add_parser('upper', help='upper case some fields')
-    parser_upper.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_upper.add_argument('-f','--fields',
-                        help='fields to clean, separate multi field using comma');
-    parser_upper.add_argument('-out','--outfile',
-                        help='output file for replaced value');
-    
-    #parser lower
-    parser_lower = subparsers.add_parser('lower', help='lower case some fields')
-    parser_lower.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_lower.add_argument('-f','--fields',
-                        help='fields to clean, separate multi field using comma');
-    parser_lower.add_argument('-out','--outfile',
-                        help='output cleaned file');
-
-    #read openrefine mass edit
-    parser_massedit = subparsers.add_parser('massedit', help='Reading mass edit from openrefine config for merging operation')
-    parser_massedit.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_massedit.add_argument('-c','--config',
-                        help='open refine json config file');
-    parser_massedit.add_argument('-nf','--newfield',
-                        help='new cleaned field, if not define will be defiend automatically');
-    parser_massedit.add_argument('-out','--outfile',
-                        help='output cleaned file');
-
-    #load table sqlite
-    parser_loadtable = subparsers.add_parser('loadtable', help='Load csv file into sqlite database')
-    parser_loadtable.add_argument('-in','--infile',
-                        help='file to clean');        
-    parser_loadtable.add_argument('-out','--outfile',
-                        help='output sqlite file');
-    parser_loadtable.add_argument('-t','--tname',
-                        help='table name for loaded file');
-    parser_loadtable.add_argument('-a','--addition',
-                        help='if present, command will not create new table');
-
-    #run query sqlite
-    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
-    parser_runquery.add_argument('-in','--infile',
-                        help='file that contains sql query');        
-    parser_runquery.add_argument('-d','--database',
-                        help='sqlite3 database file');
-    parser_runquery.add_argument('-out','--outfile',
-                        help='if present, result of query will be present in csv file');
+   # #add_id
+   # parser_id = subparsers.add_parser('id', help='gives id for a particular csv file') 
+   # parser_id.add_argument('-in','--infile',
+   #                     help='input file to be cleaned');
+   # parser_id.add_argument('-out','--outfile',
+   #                     help='output cleaned file');
+   # parser_id.add_argument('-s','--startid',
+   #                     help='starting id, if it''s not stated then will start at 1');
+   # parser_id.add_argument('-f','--field',
+   #                     help='field name for id, if not stated then field name will be ID');
+   # 
+   # #init using framework config
+   # parser_init = subparsers.add_parser('init', help='group and count predefined fields, file output will be determined by column name') 
+   # parser_init.add_argument('-c','--config',
+   #                     help='config file for cleaning');        
+   # parser_init.add_argument('-in','--infile',
+   #                     help='input file to be cleaned');
+   # parser_init.add_argument('-out','--outfile',
+   #                     help='output cleaned file');
+   #     
+   # # create the parser for the "hcleaning" command
+   # #group
+   # parser_group = subparsers.add_parser('group', help='group and count predefined fields, file output will be determined by column name')
+   # parser_group.add_argument('-in','--infile',
+   #                     help='file to be cleaned');        
+   # parser_group.add_argument('-f','--fields',
+   #                     help='fields that one to be grouped');
+   #
+   # #merge
+   # parser_merge = subparsers.add_parser('merge', help='merge distincted fields value in one file, file can be used as input for cluster and merging operation on openrefine');
+   # parser_merge.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_merge.add_argument('-f','--fields',
+   #                     help='fields that one to be grouped');
+   # parser_merge.add_argument('-out','--outfile',
+   #                     help='output merge file');
+   #                     
+   # #select
+   # parser_select = subparsers.add_parser('select', help='select particular fields into new output file')
+   # parser_select.add_argument('-in','--infile',
+   #                     help='file to clean');
+   # parser_select.add_argument('-f','--fields',
+   #                     help='selected fields that want to be separated');
+   # parser_select.add_argument('-out','--outfile', help='output file for select fields operation') 
+   # 
+   # #regexreplace
+   # parser_regex = subparsers.add_parser('regexrep', help='replace pattern defined by regular expression to some value')
+   # parser_regex.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_regex.add_argument('-f','--field',
+   #                     help='field to replace');
+   # parser_regex.add_argument('-p','--pattern',
+   #                     help='pattern to be searched by regex');
+   # parser_regex.add_argument('-r','--replace',
+   #                     help='replaced value');
+   # parser_regex.add_argument('-nf','--newfield',
+   #                     help='new field for replaced value, otherwise it will automatically create new field');
+   # parser_regex.add_argument('-out','--outfile',
+   #                     help='output file for replaced value');
+   # 
+   # #trim
+   # parser_trim = subparsers.add_parser('trim', help='trim left and right particular fields, separate using comma')
+   # parser_trim.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_trim.add_argument('-f','--fields',
+   #                     help='fields to clean, separate multi field using comma');
+   # parser_trim.add_argument('-out','--outfile',
+   #                     help='output file for replaced value');
+   # 
+   # #parser collapse space
+   # parser_colspace = subparsers.add_parser('colspace', help='colapse multiple white space for some fields')
+   # parser_colspace.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_colspace.add_argument('-f','--fields',
+   #                     help='fields to clean, separate multi field using comma');
+   # parser_colspace.add_argument('-out','--outfile',
+   #                     help='output file for replaced value');
+   #
+   # #parser toupper
+   # parser_upper = subparsers.add_parser('upper', help='upper case some fields')
+   # parser_upper.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_upper.add_argument('-f','--fields',
+   #                     help='fields to clean, separate multi field using comma');
+   # parser_upper.add_argument('-out','--outfile',
+   #                     help='output file for replaced value');
+   # 
+   # #parser lower
+   # parser_lower = subparsers.add_parser('lower', help='lower case some fields')
+   # parser_lower.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_lower.add_argument('-f','--fields',
+   #                     help='fields to clean, separate multi field using comma');
+   # parser_lower.add_argument('-out','--outfile',
+   #                     help='output cleaned file');
+   #
+   # #read openrefine mass edit
+   # parser_massedit = subparsers.add_parser('massedit', help='Reading mass edit from openrefine config for merging operation')
+   # parser_massedit.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_massedit.add_argument('-c','--config',
+   #                     help='open refine json config file');
+   # parser_massedit.add_argument('-nf','--newfield',
+   #                     help='new cleaned field, if not define will be defiend automatically');
+   # parser_massedit.add_argument('-out','--outfile',
+   #                     help='output cleaned file');
+   #
+   # #load table sqlite
+   # parser_loadtable = subparsers.add_parser('loadtable', help='Load csv file into sqlite database')
+   # parser_loadtable.add_argument('-in','--infile',
+   #                     help='file to clean');        
+   # parser_loadtable.add_argument('-out','--outfile',
+   #                     help='output sqlite file');
+   # parser_loadtable.add_argument('-t','--tname',
+   #                     help='table name for loaded file');
+   # parser_loadtable.add_argument('-a','--addition',
+   #                     help='if present, command will not create new table');
+   #
+   # #run query sqlite
+   # parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
+   # parser_runquery.add_argument('-in','--infile',
+   #                     help='file that contains sql query');        
+   # parser_runquery.add_argument('-d','--database',
+   #                     help='sqlite3 database file');
+   # parser_runquery.add_argument('-out','--outfile',
+   #                     help='if present, result of query will be present in csv file');
 
                         
-    args = parser.parse_args(argv[1:]);
-                
+    args = parser.parse_args(argv[1:]);                
                 
     if len(argv)>1:
+        args = parserArr[argv[1]]['parser'].parse_args(argv[2:]);
+        argobj = vars(args);
+        
+        comm = argv[1];
+        if(comm not in parserArr.keys()):
+            print("%s command is not allowed" %(comm));
+            return;
+        
+        
+        #check required command
+        myparser = parserArr[comm];
+        for myarg in myparser['argument']:
+            if(myarg['required'] and argobj[myarg['longparam'].replace('--','')] is None):
+                print(myarg['message']);
+                return;                
+        
         if argv[1]=='id':             
-            args = parser_id.parse_args(argv[2:]);
-            argobj = vars(args);
-            if (argobj['infile'] is not None) :
-                if (argobj['outfile'] is not None) :
+#            args = parser_id.parse_args(argv[2:]);
+#            argobj = vars(args);
+#            if (argobj['infile'] is not None) :
+#                if (argobj['outfile'] is not None) :
                     readfile = openReadFile(argobj['infile'],',');    
                     idwriter = openWriteFile(argobj['outfile']);                                 
                     start = 1;
@@ -492,362 +726,362 @@ def main(argv):
                             temparr.append(row[tempfield]);
                         idwriter.writerow(temparr);
                         start = start + 1;                                        
-                else:
-                    print("you must define output file with -out [select_outfile]");    
-            else:
-                print('infile not defined, you must define file input -in [file_name]');
+#                else:
+#                    print("you must define output file with -out [select_outfile]");    
+#            else:
+#                print('infile not defined, you must define file input -in [file_name]');
         
         if argv[1]=='init':             
-            args = parser_init.parse_args(argv[2:]);
-            argobj = vars(args);
-            if (argobj['infile'] is not None) :
-                if (argobj['config'] is not None) :
-                    if (argobj['outfile'] is not None) :
+#            args = parser_init.parse_args(argv[2:]);
+#            argobj = vars(args);
+#            if (argobj['infile'] is not None) :
+#                if (argobj['config'] is not None) :
+#                    if (argobj['outfile'] is not None) :
                         runConfig(argobj['infile'],argobj['outfile'] ,argobj['config'] );
-                    else:
-                        print("you must define output file with -out [select_outfile]");    
-                else:
-                    print('config file not defined, you must define config file using -c [config file]');
-            else:
-                print('infile not defined, you must define fields to be grouped using -in [file_name]');
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");    
+#                else:
+#                    print('config file not defined, you must define config file using -c [config file]');
+#            else:
+#                print('infile not defined, you must define fields to be grouped using -in [file_name]');
                 
         if argv[1]=='group':             
-            args = parser_group.parse_args(argv[2:]);
-            argobj = vars(args);
-            if (argobj['infile'] is not None) :
+#            args = parser_group.parse_args(argv[2:]);
+#            argobj = vars(args);
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');
                 #initialization for group
-                if (argobj['fields'] is not None) :
-                    groupArr = argobj['fields'].split(',');
-                    groupResult = {};
-                    for row in readfile['rows']:                
-                        #group column
-                        groupColumn(groupArr,row,groupResult);
-                    saveGroupColumn(groupResult);
-                else:
-                    print('fields not defined, you must define fields to be grouped using -f [fields]');
-            else:
-                print('infile not defined, you must define fields to be grouped using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+                groupArr = argobj['fields'].split(',');
+                groupResult = {};
+                for row in readfile['rows']:                
+                    #group column
+                    groupColumn(groupArr,row,groupResult);
+                saveGroupColumn(groupResult);
+#                else:
+#                    print('fields not defined, you must define fields to be grouped using -f [fields]');
+#            else:
+#                print('infile not defined, you must define fields to be grouped using -in [file_name]');
                 
         if argv[1]=='merge':             
-            args = parser_merge.parse_args(argv[2:]);
-            argobj = vars(args);
-            if (argobj['infile'] is not None) :
+#            args = parser_merge.parse_args(argv[2:]);
+#            argobj = vars(args);
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');
                 #initialization for group
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :                    
-                        groupArr = argobj['fields'].split(',');
-                        groupResult = {};
-                        for row in readfile['rows']:                
-                            #group column
-                            groupColumn(groupArr,row,groupResult);
-                        mergeGroupColumn(groupResult,argobj['outfile']);
-                    else:
-                        print("you must define output file with -out [select_outfile]");                        
-                else:
-                    print('fields not defined, you must define fields to be grouped using -f [fields]');
-            else:
-                print('infile not defined, you must define fields to be grouped using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :                    
+                groupArr = argobj['fields'].split(',');
+                groupResult = {};
+                for row in readfile['rows']:                
+                    #group column
+                    groupColumn(groupArr,row,groupResult);
+                mergeGroupColumn(groupResult,argobj['outfile']);
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");                        
+#                else:
+#                    print('fields not defined, you must define fields to be grouped using -f [fields]');
+#            else:
+#                print('infile not defined, you must define fields to be grouped using -in [file_name]');
         
         if argv[1]=='select':
-            args = parser_select.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_select.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for select
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        selectArr = argobj['fields'].split(',');
-                        # make new output file
-                        selectwriter = openWriteFile(argobj['outfile']);
-                        #print header
-                        selectwriter.writerow(selectArr);
-                        for row in readfile['rows']:                
-                            #group column                        
-                            selectColumn(row,selectArr,selectwriter);                        
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define fields to be selected using -f [fields]");
-            else:
-                print('infile not defined, you must define fields to be grouped using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                selectArr = argobj['fields'].split(',');
+                # make new output file
+                selectwriter = openWriteFile(argobj['outfile']);
+                #print header
+                selectwriter.writerow(selectArr);
+                for row in readfile['rows']:                
+                    #group column                        
+                    selectColumn(row,selectArr,selectwriter);                        
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define fields to be selected using -f [fields]");
+#            else:
+#                print('infile not defined, you must define fields to be grouped using -in [file_name]');
                                 
         if argv[1]=='regexrep':
-            args = parser_regex.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_regex.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for regular expression cleaning 
-                if (argobj['pattern'] is not None) :
-                    if (argobj['replace'] is not None) :
-                        if (argobj['field'] is not None) :
-                            if (argobj['outfile'] is not None) :
-                                regArr = readfile['header'].copy();
-                                #make output file                          
-                                regWriter = openWriteFile(argobj['outfile']);
-                                #define new column
-                                newColumn = autoDefineColumn(regarr,argobj['regfield']);
-                                regArr.append(newColumn);
-                                #write new header file
-                                regWriter.writerow(regArr);
-                                #copy row so it won't affect another operation
-                                for row in readfile['rows']:                
-                                    #replace using horizontal cleaning                                   
-                                    regexReplace(row,argobj['pattern'],newColumn,argobj['field'],argobj['replace'],regWriter);
-                            else:
-                                print("you must output file for regexrep operation with -out [output file name]");                                
-                        else:
-                            print("you must define field to replace with -f [field name]");
-                    else:
-                        print("you must define output replace value with -r [replace value]");                                  
-                else:
-                    print("you must define pattern to replace using -p [regex pattern]");
-            else:
-                print('infile not defined, you must define fields to be grouped using -in [file_name]');                    
+#                if (argobj['pattern'] is not None) :
+#                    if (argobj['replace'] is not None) :
+#                        if (argobj['field'] is not None) :
+#                            if (argobj['outfile'] is not None) :
+                regArr = readfile['header'].copy();
+                #make output file                          
+                regWriter = openWriteFile(argobj['outfile']);
+                #define new column
+                newColumn = autoDefineColumn(regarr,argobj['regfield']);
+                regArr.append(newColumn);
+                #write new header file
+                regWriter.writerow(regArr);
+                #copy row so it won't affect another operation
+                for row in readfile['rows']:                
+                    #replace using horizontal cleaning                                   
+                    regexReplace(row,argobj['pattern'],newColumn,argobj['field'],argobj['replace'],regWriter);
+#                            else:
+#                                print("you must output file for regexrep operation with -out [output file name]");                                
+#                        else:
+#                            print("you must define field to replace with -f [field name]");
+#                    else:
+#                        print("you must define output replace value with -r [replace value]");                                  
+#                else:
+#                    print("you must define pattern to replace using -p [regex pattern]");
+#            else:
+#                print('infile not defined, you must define fields to be grouped using -in [file_name]');                    
                 
         #trim command        
         if argv[1]=='trim':
-            args = parser_trim.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_trim.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for trim
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        regArr = readfile['header'].copy();                                
-                        commonWriter = openWriteFile(argobj['outfile']);
-                        #define new column
-                        fields = argobj['fields'].split(',');
-                        newField = {};
-                        for field in fields:
-                            newField[field] = autoDefineColumn(regArr,field);
-                            regArr.append(newField[field]);                            
-                        #write new header file
-                        commonWriter.writerow(regArr);                                                
-                        for row in readfile['rows']:                
-                            #trim fields 
-                            trim(row,regArr,fields,newField,commonWriter);                                                    
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define fields to be trimed using -f [fields]");
-            else:
-                print('infile not defined, you must define fields to be trimed using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                regArr = readfile['header'].copy();                                
+                commonWriter = openWriteFile(argobj['outfile']);
+                #define new column
+                fields = argobj['fields'].split(',');
+                newField = {};
+                for field in fields:
+                    newField[field] = autoDefineColumn(regArr,field);
+                    regArr.append(newField[field]);                            
+                #write new header file
+                commonWriter.writerow(regArr);                                                
+                for row in readfile['rows']:                
+                    #trim fields 
+                    trim(row,regArr,fields,newField,commonWriter);
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define fields to be trimed using -f [fields]");
+#            else:
+#                print('infile not defined, you must define fields to be trimed using -in [file_name]');
 
         #collapse white space
         if argv[1]=='colspace':
-            args = parser_colspace.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_colspace.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for trim
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        regArr = readfile['header'].copy();                                
-                        commonWriter = openWriteFile(argobj['outfile']);
-                        #define new column
-                        fields = argobj['fields'].split(',');
-                        newField = {};
-                        for field in fields:
-                            newField[field] = autoDefineColumn(regArr,field);
-                            regArr.append(newField[field]);                            
-                        #write new header file
-                        commonWriter.writerow(regArr);                                                
-                        for row in readfile['rows']:                
-                            #collapse white space fields
-                            dspace(row,regArr,fields,newField,commonWriter);                        
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define fields to be cleaned using -f [fields]");
-            else:
-                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                regArr = readfile['header'].copy();                                
+                commonWriter = openWriteFile(argobj['outfile']);
+                #define new column
+                fields = argobj['fields'].split(',');
+                newField = {};
+                for field in fields:
+                    newField[field] = autoDefineColumn(regArr,field);
+                    regArr.append(newField[field]);                            
+                #write new header file
+                commonWriter.writerow(regArr);                                                
+                for row in readfile['rows']:                
+                    #collapse white space fields
+                    dspace(row,regArr,fields,newField,commonWriter);                        
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define fields to be cleaned using -f [fields]");
+#            else:
+#                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
         
         #uper
         if argv[1]=='upper':
-            args = parser_upper.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_upper.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for trim
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        regArr = readfile['header'].copy();                                
-                        commonWriter = openWriteFile(argobj['outfile']);
-                        #define new column
-                        fields = argobj['fields'].split(',');
-                        newField = {};
-                        for field in fields:
-                            newField[field] = autoDefineColumn(regArr,field);
-                            regArr.append(newField[field]);                            
-                        #write new header file
-                        commonWriter.writerow(regArr);                                                
-                        for row in readfile['rows']:                
-                            #collapse white space fields
-                            upper(row,regArr,fields,newField,commonWriter);                                                                    
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define fields to be cleaned using -f [fields]");
-            else:
-                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                regArr = readfile['header'].copy();                                
+                commonWriter = openWriteFile(argobj['outfile']);
+                #define new column
+                fields = argobj['fields'].split(',');
+                newField = {};
+                for field in fields:
+                    newField[field] = autoDefineColumn(regArr,field);
+                    regArr.append(newField[field]);                            
+                #write new header file
+                commonWriter.writerow(regArr);                                                
+                for row in readfile['rows']:                
+                    #collapse white space fields
+                    upper(row,regArr,fields,newField,commonWriter);                                                                    
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define fields to be cleaned using -f [fields]");
+#            else:
+#                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
             
         #lower
         if argv[1]=='lower':
-            args = parser_lower.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_lower.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');            
                 #initialization for trim
-                if (argobj['fields'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        regArr = readfile['header'].copy();                                
-                        commonWriter = openWriteFile(argobj['outfile']);
-                        #define new column
-                        fields = argobj['fields'].split(',');
-                        newField = {};
-                        for field in fields:
-                            newField[field] = autoDefineColumn(regArr,field);
-                            regArr.append(newField[field]);                            
-                        #write new header file
-                        commonWriter.writerow(regArr);                                                
-                        for row in readfile['rows']:                
-                            #collapse white space fields
-                            lower(row,regArr,fields,newField,commonWriter);                                                                    
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define fields to be cleaned using -f [fields]");
-            else:
-                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+#                if (argobj['fields'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                regArr = readfile['header'].copy();                                
+                commonWriter = openWriteFile(argobj['outfile']);
+                #define new column
+                fields = argobj['fields'].split(',');
+                newField = {};
+                for field in fields:
+                    newField[field] = autoDefineColumn(regArr,field);
+                    regArr.append(newField[field]);                            
+                #write new header file
+                commonWriter.writerow(regArr);                                                
+                for row in readfile['rows']:                
+                    #collapse white space fields
+                    lower(row,regArr,fields,newField,commonWriter);                                                                    
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define fields to be cleaned using -f [fields]");
+#            else:
+#                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
         
         #massedit
         if argv[1]=='massedit':
-            args = parser_massedit.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) :
+#            args = parser_massedit.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) :
                 readfile = openReadFile(argobj['infile'],',');
                 header = readfile['header'].copy();
                 #initialization for trim
-                if (argobj['config'] is not None) :
-                    if (argobj['outfile'] is not None) :
-                        masseditWriter = openWriteFile(argobj['outfile']);
-                        
-                        #read json config file
-                        with open(argobj['config']) as json_file:
-                            jsonConfig = json.load(json_file)
-                        
-                        if(argobj['newfield'] is not None):
-                            newfields = argobj['newfield'].split(',');
-                            if(len(newfields)!=len(jsonConfig)):
-                                print("fields defined must be the same as config length, config: %s vs newfield: %s" %(len(jsonConfig),len(newfields)));
-                                return;
-                            
-                        j = 0;
-                        #field to replace
-                        for config in jsonConfig:
-                            #mass edit only
-                            if(config['op']=="core/mass-edit"):
-                                field = config['columnName'];
-                                if(argobj['newfield'] is None):
-                                    newfield = autoDefineColumn(header,field);
-                                else:
-                                    newfield = newfields[j];
-                                header.append(newfield);
-                                masseditWriter.writerow(header);
-                                #start fetching
-                                for row in readfile['rows']:
-                                    dcField = dcvalue.DCValue(row[field]);                                    
-                                    #fetch massedit config
-                                    row[newfield]=row[field];                                    
-                                    for edit in config['edits']:
-                                        #text must be the same
-                                        if(edit['from']==row[field]):
-                                            row[newfield]=row[field].replace(edit['from'],edit['to']);
-                                            #break the iteration because its match condition
-                                            break;
-                                        '''
-                                        Don't use regexrep anymore because of buggy replace when text
-                                        contains regular expressions character
-                                        #pattern must exactly match
-                                        pattern = '^('+edit['from'][0];
-                                        # add aditional pattern
-                                        if(len(edit['from'])>1):
-                                            i = 1;
-                                            while (i<len(edit['from'])):
-                                                pattern = pattern + '|' + edit['from'][i];
-                                                i = i + 1;                                            
-                                        # close pattern
-                                        pattern = pattern +')$';
-                                        print(pattern);
-                                        replace = edit['to'];
-                                        dcField.regexReplace(pattern,replace);
-                                        row[newfield]=dcField.value;
-                                        '''                                    
-                                    temprow = [];
-                                    for tempField in header:
-                                        temprow.append(row[tempField]);
-                                    masseditWriter.writerow(temprow);
-                            j = j + 1;
-                    else:
-                        print("you must define output file with -out [select_outfile]");
-                else:
-                    print("you must define config file from openrefine using -c [config]");
-            else:
-                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+#                if (argobj['config'] is not None) :
+#                    if (argobj['outfile'] is not None) :
+                masseditWriter = openWriteFile(argobj['outfile']);
+                
+                #read json config file
+                with open(argobj['config']) as json_file:
+                    jsonConfig = json.load(json_file)
+                
+                if(argobj['newfield'] is not None):
+                    newfields = argobj['newfield'].split(',');
+                    if(len(newfields)!=len(jsonConfig)):
+                        print("fields defined must be the same as config length, config: %s vs newfield: %s" %(len(jsonConfig),len(newfields)));
+                        return;
+                    
+                j = 0;
+                #field to replace
+                for config in jsonConfig:
+                    #mass edit only
+                    if(config['op']=="core/mass-edit"):
+                        field = config['columnName'];
+                        if(argobj['newfield'] is None):
+                            newfield = autoDefineColumn(header,field);
+                        else:
+                            newfield = newfields[j];
+                        header.append(newfield);
+                        masseditWriter.writerow(header);
+                        #start fetching
+                        for row in readfile['rows']:
+                            dcField = dcvalue.DCValue(row[field]);                                    
+                            #fetch massedit config
+                            row[newfield]=row[field];                                    
+                            for edit in config['edits']:
+                                #text must be the same
+                                if(edit['from']==row[field]):
+                                    row[newfield]=row[field].replace(edit['from'],edit['to']);
+                                    #break the iteration because its match condition
+                                    break;
+                                '''
+                                Don't use regexrep anymore because of buggy replace when text
+                                contains regular expressions character
+                                #pattern must exactly match
+                                pattern = '^('+edit['from'][0];
+                                # add aditional pattern
+                                if(len(edit['from'])>1):
+                                    i = 1;
+                                    while (i<len(edit['from'])):
+                                        pattern = pattern + '|' + edit['from'][i];
+                                        i = i + 1;                                            
+                                # close pattern
+                                pattern = pattern +')$';
+                                print(pattern);
+                                replace = edit['to'];
+                                dcField.regexReplace(pattern,replace);
+                                row[newfield]=dcField.value;
+                                '''                                    
+                            temprow = [];
+                            for tempField in header:
+                                temprow.append(row[tempField]);
+                            masseditWriter.writerow(temprow);
+                    j = j + 1;
+#                    else:
+#                        print("you must define output file with -out [select_outfile]");
+#                else:
+#                    print("you must define config file from openrefine using -c [config]");
+#            else:
+#                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
 
         #loadtable
         if argv[1]=='loadtable':
-            args = parser_loadtable.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) : 
-                if(argobj['tname'] is not None):
+#            args = parser_loadtable.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) : 
+#                if(argobj['tname'] is not None):
                     tablename = argobj['tname'];                           
                     readfile = openReadFile(argobj['infile'],',');
                     header = readfile['header'].copy();
                     #initialization for trim
-                    if (argobj['outfile'] is not None) :
+#                    if (argobj['outfile'] is not None) :
                         #open connection
-                        conn = sqlite3.connect(argobj['outfile']);
-                        #define cursor
-                        c = conn.cursor()
-                        createquery = "CREATE TABLE "+tablename+" (";
-                        insertquery = "INSERT INTO "+tablename+" VALUES (";
-                        for pos,item in enumerate(header):
-                            createquery = createquery + "'" + item + "'";                            
-                            insertquery = insertquery + "?";
-                            # add comma for before last item
-                            if(pos<len(header)-1):
-                                createquery = createquery + ",";
-                                insertquery = insertquery + ",";
-                        createquery = createquery + ")";
-                        insertquery = insertquery + ")";
-                        print(createquery);
-                        print(insertquery);
-                        if(argobj['addition'] is None):
-                            c.execute(createquery);
-                        #start fetching
-                        for row in readfile['rows']:                                                        
-                            temprow = [];
-                            for tempField in header:
-                                temprow.append(row[tempField]);
-                            c.execute(insertquery,temprow);
-                        conn.commit();  
-                    else:
-                        print("you must define output file with -o [database file]");                                    
-                else:
-                    print("you must define table destination name with -t [table name]");
-            else:
-                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
+                    conn = sqlite3.connect(argobj['outfile']);
+                    #define cursor
+                    c = conn.cursor()
+                    createquery = "CREATE TABLE "+tablename+" (";
+                    insertquery = "INSERT INTO "+tablename+" VALUES (";
+                    for pos,item in enumerate(header):
+                        createquery = createquery + "'" + item + "'";                            
+                        insertquery = insertquery + "?";
+                        # add comma for before last item
+                        if(pos<len(header)-1):
+                            createquery = createquery + ",";
+                            insertquery = insertquery + ",";
+                    createquery = createquery + ")";
+                    insertquery = insertquery + ")";
+                    print(createquery);
+                    print(insertquery);
+                    if(argobj['addition'] is None):
+                        c.execute(createquery);
+                    #start fetching
+                    for row in readfile['rows']:                                                        
+                        temprow = [];
+                        for tempField in header:
+                            temprow.append(row[tempField]);
+                        c.execute(insertquery,temprow);
+                    conn.commit();  
+#                    else:
+#                        print("you must define output file with -o [database file]");                                    
+#                else:
+#                    print("you must define table destination name with -t [table name]");
+#            else:
+#                print('infile not defined, you must define fields to be cleaned using -in [file_name]');
 
 
         #loadtable
         if argv[1]=='runquery':
-            args = parser_runquery.parse_args(argv[2:]);
-            argobj = vars(args);            
-            if (argobj['infile'] is not None) : 
-                if(argobj['database'] is not None):
+#            args = parser_runquery.parse_args(argv[2:]);
+#            argobj = vars(args);            
+#            if (argobj['infile'] is not None) : 
+#                if(argobj['database'] is not None):
                     #initialization for trim
                     outfile = False;
                     if (argobj['outfile'] is not None) :
@@ -902,19 +1136,19 @@ def main(argv):
                             else:
                                 print("-------END EXECUTE QUERY-------");
                             
-                else:
-                    print("you must define database file using -d [database file]");
-            else:
-                print('sqlfile not defined, you must define fields to be cleaned using -in [sqlfile]');
+#                else:
+#                    print("you must define database file using -d [database file]");
+#            else:
+#                print('sqlfile not defined, you must define fields to be cleaned using -in [sqlfile]');
 
     #run query sqlite
-    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
-    parser_runquery.add_argument('-in','--infile',
-                        help='file that contains sql query');        
-    parser_runquery.add_argument('-d','--database',
-                        help='sqlite3 database file');
-    parser_runquery.add_argument('-out','--output',
-                        help='if present, result of query will be present in csv file');
+#    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
+#    parser_runquery.add_argument('-in','--infile',
+#                        help='file that contains sql query');        
+#    parser_runquery.add_argument('-d','--database',
+#                        help='sqlite3 database file');
+#    parser_runquery.add_argument('-out','--output',
+#                        help='if present, result of query will be present in csv file');
 
 
 #    print(vars(args));
