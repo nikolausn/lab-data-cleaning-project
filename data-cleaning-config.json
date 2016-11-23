@@ -47,7 +47,7 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "[\\[\\]*()),.]",
+						"regex": "[\\[\\]*(),.]",
 						"replace": " "
 					}
 				},				
@@ -69,7 +69,7 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "[\\[\\]*()),.]",
+						"regex": "[\\[\\]*(),.]",
 						"replace": " "
 					}
 				},				
@@ -91,7 +91,7 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "[\\[\\]*()),.-]",
+						"regex": "[\\[\\]*(),.-]",
 						"replace": " "
 					}
 				},				
@@ -113,7 +113,7 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "[\\[\\]*()),.?`]",
+						"regex": "[\\[\\]*(),.?`]",
 						"replace": " "
 					}
 				},				
@@ -135,7 +135,7 @@
 				{
 					"fname": "regexReplace",
 					"fparam": {
-						"regex": "[\\[\\]*()),.?`]",
+						"regex": "[\\[\\]*(),.?`]",
 						"replace": " "
 					}
 				},
@@ -165,6 +165,28 @@
 					"fname": "regexReplace",
 					"fparam": {
 						"regex": "[*]",
+						"replace": " "
+					}
+				},
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Driver City",
+			"newField": "Driver City 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.]",
 						"replace": " "
 					}
 				},

@@ -500,7 +500,7 @@ def main(argv):
                 }
             ]
         },
-        'loadttable': {
+        'loadtable': {
             'help': 'Load csv file into sqlite database',
             'argument': [
                 commonIn,
@@ -978,29 +978,58 @@ def main(argv):
                         print("fields defined must be the same as config length, config: %s vs newfield: %s" %(len(jsonConfig),len(newfields)));
                         return;
                     
-                j = 0;
+                
                 #field to replace
-                for config in jsonConfig:
-                    #mass edit only
-                    if(config['op']=="core/mass-edit"):
-                        field = config['columnName'];
-                        if(argobj['newfield'] is None):
-                            newfield = autoDefineColumn(header,field);
-                        else:
-                            newfield = newfields[j];
-                        header.append(newfield);
-                        masseditWriter.writerow(header);
-                        #start fetching
-                        for row in readfile['rows']:
-                            dcField = dcvalue.DCValue(row[field]);                                    
+                tempValue = {};
+                i = 0;
+                for row in readfile['rows']:                
+                    j = 0;
+                    for config in jsonConfig:
+                        #mass edit only
+                        if(config['op']=="core/mass-edit"):
+                            field = config['columnName'];
+                            if not field in tempValue.keys():                        
+                                if(argobj['newfield'] is None):
+                                    newfield = autoDefineColumn(header,field);
+                                else:
+                                    newfield = newfields[j];
+                                #store newfield value
+                                tempValue[field] = newfield;
+                                header.append(newfield);
+                                #row[newfield] = row[field];
+                                value = row[field];
+                            else:
+                                newfield = tempValue[field];                                
+                                #row[newfield] = row[field];
+                                if newfield in row.keys():
+                                    value = row[newfield];
+                                else:
+                                    value = row[field];
+                                field = tempValue[field];
+                                
+                            #start fetching                   
+                            #print('field: %s' %(field));
+                            #dcField = dcvalue.DCValue(row[field]);
                             #fetch massedit config
-                            row[newfield]=row[field];                                    
+                            #row[newfield]=row[field];                            
                             for edit in config['edits']:
                                 #text must be the same
-                                if(edit['from']==row[field]):
-                                    row[newfield]=row[field].replace(edit['from'],edit['to']);
+#                                for editfrom in edit['from']: 
+                                    #print('edited %s - %s : %s' %(editfrom,row[field],edit['to']))
+                                    #if(editfrom==row[field]):
+                                    #    row[newfield]=row[field].replace(editfrom,edit['to']);
+                                    #    break;
+                                if value in edit['from']:
+                                #    if row[field]!=edit['to']:
+                                #    print('edited %s - %s' %(value,edit['to']))
+                                    row[newfield]=edit['to'];
+                                    value = row[newfield];
+                                #    if row[field]==edit['to']:
+                                #        print('ok %s - %s' %(row[field],edit['to']))
                                     #break the iteration because its match condition
-                                    break;
+                                    #break;
+                                else:
+                                    row[newfield]=value;                                
                                 '''
                                 Don't use regexrep anymore because of buggy replace when text
                                 contains regular expressions character
@@ -1019,11 +1048,17 @@ def main(argv):
                                 dcField.regexReplace(pattern,replace);
                                 row[newfield]=dcField.value;
                                 '''                                    
-                            temprow = [];
-                            for tempField in header:
-                                temprow.append(row[tempField]);
-                            masseditWriter.writerow(temprow);
-                    j = j + 1;
+                        j = j + 1;
+                    # write header
+                    if i==0:
+                        masseditWriter.writerow(header);
+                    # write row
+                    temprow = [];
+                    for tempField in header:
+                        temprow.append(row[tempField]);
+                    masseditWriter.writerow(temprow);
+                    i = i + 1;
+                                        
 #                    else:
 #                        print("you must define output file with -out [select_outfile]");
 #                else:
@@ -1140,15 +1175,6 @@ def main(argv):
 #                    print("you must define database file using -d [database file]");
 #            else:
 #                print('sqlfile not defined, you must define fields to be cleaned using -in [sqlfile]');
-
-    #run query sqlite
-#    parser_runquery = subparsers.add_parser('runquery', help='Run Query to sqlite database defined -d --database')
-#    parser_runquery.add_argument('-in','--infile',
-#                        help='file that contains sql query');        
-#    parser_runquery.add_argument('-d','--database',
-#                        help='sqlite3 database file');
-#    parser_runquery.add_argument('-out','--output',
-#                        help='if present, result of query will be present in csv file');
 
 
 #    print(vars(args));

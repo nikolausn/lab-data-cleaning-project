@@ -24,15 +24,26 @@ class DCValue:
     
     #regular expression cleanup / replace
     def regexReplace(self,pattern,replace):
+#        print(pattern);
         repattern = re.compile(pattern);
-        tempvalue = self.value;
+#        tempvalue = self.value;
+#        initvalue = re.sub(repattern,replace,self.value);
+        #do repattern every time the value changes
+#        while initvalue != tempvalue:
+#            #print("while %s | %s" %(initvalue,tempvalue));
+#            tempvalue = initvalue;
+#            initvalue = re.sub(repattern,replace,self.value);
+#        self.value = initvalue;
         self.value = re.sub(repattern,replace,self.value);
         #print('%s - %s' %(tempvalue,self.value))
         return self;
     
     #collapse multiple whitespace
     def collapseWhiteSpace(self):
-        self.regexReplace('/\\s+/',' ');
+        tempvalue = self.value;
+        self.regexReplace('\\s+',' ');
+#        if(tempvalue!=self.value):
+#            print("while %s | %s" %(tempvalue,self.value));
         return self;
     
     #toUpper
