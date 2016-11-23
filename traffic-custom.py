@@ -14,10 +14,10 @@ def vehicleSplit(value,field,row,rownum):
     vehicles = []
     if(position is not None):
         start = position.start();
-        vehicle1 = vehicle[0:start-1];
+        vehicle1 = vehicle[0:start];
         vehicles.append(vehicle1);
         if(start<len(vehicle)-1):
-            vehicle2 = vehicle[start+1:len(vehicle)-1];
+            vehicle2 = vehicle[start+1:len(vehicle)];
             vehicles.append(vehicle2);
     else:
         vehicles.append(vehicle)        

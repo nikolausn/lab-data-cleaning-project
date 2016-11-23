@@ -225,6 +225,17 @@
 					"module": "vehicleSplit"
 				}
 			]
-		}		
+		},
+		{			
+			"field": "Charge 1",
+			"operation": [
+				{
+					"fname": "vehicleSplit",
+					"fcustom": true,
+					"file": "traffic-custom",
+					"module": "vehicleSplit"
+				}
+			]
+		}	
 	]
 }
