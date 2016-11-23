@@ -3,6 +3,7 @@
 	"skipRow": 1,
 	"delimiter": ",",
 	"fields": [
+		"ROWID",
 		"Date Of Stop",
 		"Time Of Stop",
 		"Agency",

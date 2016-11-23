@@ -220,10 +220,10 @@ def openReadFile(filename,delimiter):
     return { 'header': header, 'rows': reader};
 
 
-def saveGroupColumn(groupResult):
+def saveGroupColumn(groupResult,prefix):
 #    print(groupResult);
     for groupattr,groupval in groupResult.items():
-        writer = openWriteFile("%s.%s"%('test',groupattr));
+        writer = openWriteFile("%s.%s"%(prefix,groupattr));
         head = [groupattr,'count'];
         writer.writerow(head);
         for rowattr,rowval in groupval.items():
@@ -395,7 +395,14 @@ def main(argv):
             'help': 'group and count predefined fields, file output will be determined by column name',
             'argument': [
                 commonIn,
-                commonFields          
+                commonFields,
+                {
+                    'param': '-out',
+                    'longparam': '--outfile',
+                    'help': 'outfile prefix will be followed by field name to be grouped',
+                    'required': True,
+                    'message': 'Must define prefix for output grouped files'
+                }
             ]
         },
         'merge': {
@@ -757,7 +764,7 @@ def main(argv):
                 for row in readfile['rows']:                
                     #group column
                     groupColumn(groupArr,row,groupResult);
-                saveGroupColumn(groupResult);
+                saveGroupColumn(groupResult,argobj['outfile']);
 #                else:
 #                    print('fields not defined, you must define fields to be grouped using -f [fields]');
 #            else:
@@ -1081,8 +1088,8 @@ def main(argv):
                     conn = sqlite3.connect(argobj['outfile']);
                     #define cursor
                     c = conn.cursor()
-                    createquery = "CREATE TABLE "+tablename+" (";
-                    insertquery = "INSERT INTO "+tablename+" VALUES (";
+                    createquery = "CREATE TABLE '"+tablename+"' (";
+                    insertquery = "INSERT INTO '"+tablename+"' VALUES (";
                     for pos,item in enumerate(header):
                         createquery = createquery + "'" + item + "'";                            
                         insertquery = insertquery + "?";
