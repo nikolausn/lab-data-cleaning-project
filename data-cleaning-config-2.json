@@ -1,0 +1,229 @@
+{	
+	"fileName": "/Volumes/HD-500GB/Users/nikolausn/Documents/msimsvn/msimrepo/Traffic_Violations.csv",
+	"skipRow": 1,
+	"delimiter": ",",
+	"fields": [
+		"Date Of Stop",
+		"Time Of Stop",
+		"Agency",
+		"SubAgency",
+		"Description",
+		"Location",
+		"Latitude",
+		"Longitude",
+		"Accident",
+		"Belts",
+		"Personal Injury",
+		"Property Damage",
+		"Fatal",
+		"Commercial License",
+		"HAZMAT",
+		"Commercial Vehicle",
+		"Alcohol",
+		"Work Zone",
+		"State",
+		"VehicleType",
+		"Year",
+		"Make",
+		"Model",
+		"Color",
+		"Violation Type",
+		"Charge",
+		"Article",
+		"Contributed To Accident",
+		"Race",
+		"Gender",
+		"Driver City",
+		"Driver State",
+		"DL State",
+		"Arrest Type",
+		"Geolocation"
+	],
+	"hcleaning": [
+		{			
+			"field": "Description",
+			"newField": "Description 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Location",
+			"newField": "Location 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.\\\\`@\\\\\\-]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Make",
+			"newField": "Make 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.\\\\\\-'`]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Model",
+			"newField": "Model 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.?`]",
+						"replace": " "
+					}
+				},				
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Color",
+			"newField": "Color 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.?`]",
+						"replace": " "
+					}
+				},
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				},
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "(N/A)",
+						"replace": ""
+					}
+				}
+			]
+		},
+		{			
+			"field": "Charge",
+			"newField": "Charge 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[*]",
+						"replace": " "
+					}
+				},
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		},
+		{			
+			"field": "Driver City",
+			"newField": "Driver City 1",
+			"operation": [
+				{
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": "[\\[\\]*(),.`]",
+						"replace": " "
+					}
+				},
+				{
+					"fname": "trim"
+				},
+				{
+					"fname": "collapseWhiteSpace"
+				},
+				{
+					"fname": "toUpper"
+				}
+			]
+		}		
+	],
+	"vcleaning": [
+		{			
+			"field": "Arrest Type",
+			"operation": [
+				{
+					"fname": "vehicleSplit",
+					"fcustom": true,
+					"file": "traffic-custom",
+					"module": "vehicleSplit"
+				}
+			]
+		},
+		{			
+			"field": "VehicleType",
+			"operation": [
+				{
+					"fname": "vehicleSplit",
+					"fcustom": true,
+					"file": "traffic-custom",
+					"module": "vehicleSplit"
+				}
+			]
+		}		
+	]
+}
