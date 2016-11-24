@@ -13,7 +13,7 @@ echo "select particular fields for merging"
 
 #massedit using config from openrefine
 echo "massedit using config from openrefine"
-./data-cleaning-framework.py massedit -in prodTraffic1 -out prodTraffic2 -c testproduction.json
+./data-cleaning-framework.py massedit -in prodTraffic1 -out prodTraffic2 -c openrefineconfig.json
 
 #select particular cleaned field for loading
 echo "select particular cleaned field for loading into table"
