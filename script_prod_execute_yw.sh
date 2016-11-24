@@ -58,7 +58,7 @@ echo "massedit using config from openrefine"
 #@out CleanedFile @uri file:prodTraffic3
 #select particular cleaned field for loading
 echo "select particular cleaned field for loading into table"
-./data-cleaning-framework.py select -in prodTraffic2 -out prodTraffic3 -f "ROWID,Date Of Stop,Time Of Stop,Agency,SubAgency,Latitude,Longitude,Accident,Belts,Personal Injury,Property Damage,Fatal,Commercial License,HAZMAT,Commercial Vehicle,Alcohol,Work Zone,State,Year,Violation Type,Article,Contributed To Accident,Race,Gender,Driver State,DL State,Geolocation,Location 1,Color 1,Charge 1,Arrest Type 1,Arrest Type 2,VehicleType 1,VehicleType 2,Description 1 1,Make 1 1,Model 1 1,Driver City 1 1"
+./data-cleaning-framework.py select -in prodTraffic2 -out prodTraffic3 -f "ROWID,Date Of Stop,Time Of Stop,Agency,SubAgency,Latitude,Longitude,Accident,Belts,Personal Injury,Property Damage,Fatal,Commercial License,HAZMAT,Commercial Vehicle,Alcohol,Work Zone,State,Year,Violation Type,Article,Contributed To Accident,Race,Gender,Driver State,DL State,Geolocation,Location 1,Color 1,Arrest Type 1,Arrest Type 2,VehicleType 1,VehicleType 2,Charge 1 1,Charge 1 2,Description 1 1,Make 1 1,Model 1 1,Driver City 1 1"
 #@end SelectField
 
 #@begin LoadDatabase @desc load selected fields to database
