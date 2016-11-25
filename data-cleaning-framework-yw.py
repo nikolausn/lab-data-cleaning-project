@@ -721,7 +721,7 @@ def main(argv):
                 #make output file                          
                 regWriter = openWriteFile(argobj['outfile']);
                 #define new column
-                newColumn = autoDefineColumn(regarr,argobj['regfield']);
+                newColumn = autoDefineColumn(regArr,argobj['regfield']);
                 regArr.append(newColumn);
                 #write new header file
                 regWriter.writerow(regArr);
