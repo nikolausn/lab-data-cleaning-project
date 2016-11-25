@@ -40,7 +40,8 @@ echo "load lookup value to table"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "Arrest Type"
 
 
-
+# cleanup intermediate files.
+rm -rf prodTraffic*
 #sql check cleaning result and ordered by frequency
 #select "Location 1",count(1) as total from TrafficViolation
 #group by "Location 1" order by total desc;
