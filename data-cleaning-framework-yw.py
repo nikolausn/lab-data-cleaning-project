@@ -900,7 +900,9 @@ def main(argv):
                     createquery = "CREATE TABLE '"+tablename+"' (";
                     insertquery = "INSERT INTO '"+tablename+"' VALUES (";
                     for pos,item in enumerate(header):
-                        createquery = createquery + "'" + item + "'";                            
+                        # Replace whitespaces with underscores in the column names. It is cumbersome to write SQL with whitespaces in column names.
+                        columnName = '_'.join(item.split())
+                        createquery = createquery + "'" + columnName + "'";
                         insertquery = insertquery + "?";
                         # add comma for before last item
                         if(pos<len(header)-1):
