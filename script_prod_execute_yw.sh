@@ -97,4 +97,6 @@ echo "load lookup value to table"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "Arrest Type"
 #@end LoadLookupValue
 
+# cleanup intermediate files.
+rm -rf prodTraffic*
 #@end main_script
