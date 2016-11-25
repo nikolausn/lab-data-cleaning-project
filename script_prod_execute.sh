@@ -30,14 +30,14 @@ echo "generate lookup value"
 #load lookup value to table
 echo "load lookup value to table"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.SubAgency" -out $3 -t "SubAgency"
-./data-cleaning-framework.py loadtable -in "prodTraffic.Property Damage" -out $3 -t "Property Damage"
+./data-cleaning-framework.py loadtable -in "prodTraffic.Property Damage" -out $3 -t "PropertyDamage"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.State" -out $3 -t "State"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.VehicleType 2" -out $3 -t "VehicleType"
-./data-cleaning-framework.py loadtable -in "prodTraffic.Violation Type" -out $3 -t "Violation Type"
+./data-cleaning-framework.py loadtable -in "prodTraffic.Violation Type" -out $3 -t "ViolationType"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.Article" -out $3 -t "Article"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.Race" -out $3 -t "Race"
 ./data-cleaning-framework.py loadtable -in "prodTraffic.Gender" -out $3 -t "Gender"
-./data-cleaning-framework.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "Arrest Type"
+./data-cleaning-framework.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "ArrestType"
 
 
 # cleanup intermediate files.
