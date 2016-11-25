@@ -39,16 +39,16 @@ echo "select particular fields for merging"
 
 #@begin OpenRefineMerge @desc merging values using open refine
 #@in ProdTrafficMergedFile
-#@out MassEditOpenRefine @uri file:testproduction.json
+#@out MassEditOpenRefine @uri file:openrefineconfig.json
 #@end OpenRefineMerge
 
 #@begin MassEdit @desc massedit values in fields using openrefine extract config file
 #@in ProdTrafficInitFile
-#@in MassEditOpenRefine @uri file:testproduction.json
+#@in MassEditOpenRefine @uri file:openrefineconfig.json
 #@out ProdTrafficMassEditFile @uri file:prodTraffic2
 #massedit using config from openrefine
 echo "massedit using config from openrefine"
-./data-cleaning-framework.py massedit -in prodTraffic1 -out prodTraffic2 -c testproduction.json
+./data-cleaning-framework.py massedit -in prodTraffic1 -out prodTraffic2 -c openrefineconfig.json
 #@end MassEdit
 
 
