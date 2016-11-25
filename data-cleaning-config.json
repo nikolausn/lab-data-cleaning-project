@@ -1,5 +1,5 @@
 {	
-	"fileName": "/Volumes/HD-500GB/Users/nikolausn/Documents/msimsvn/msimrepo/Traffic_Violations.csv",
+	"fileName": "Traffic_Violations.csv",
 	"skipRow": 1,
 	"delimiter": ",",
 	"fields": [
