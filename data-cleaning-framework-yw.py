@@ -273,46 +273,75 @@ def autoDefineColumn(headarr,field):
         i = i + 1;
     return "%s %s" % (field,i);    
 
-def regexReplace(row,field,newfield,pattern,replace,writer):
+def regexReplace(row,field,newfield,pattern,replace,writer,logstream=None,rowid=None):
     dcField = dcvalue.DCValue(row[field]);
-    dcField.regexReplace(pattern,replace);
+    dcCommand = DCCommand(dcField);
+    command = {
+					"fname": "regexReplace",
+					"fparam": {
+						"regex": pattern,
+						"replace": replace
+					}
+				};
+    dcCommand.command(command,row,field=field,rowid=rowid,logStream=logstream);    
+#    dcField.regexReplace(pattern,replace);
     row[newfield]=dcField.value;
-    writer.writerow(row); 
+    writer.writerow(row);    
 
-def trim(row,regarr,fields,newFields,writer):
+def trim(row,regarr,fields,newFields,writer,logstream=None,rowid=None):
     for field in fields:
         dcField = dcvalue.DCValue(row[field]);
-        dcField.trim();
+        dcCommand = DCCommand(dcField);        
+        command = {
+    					"fname": "trim",
+    				};
+        dcCommand.command(command,row,field=field,rowid=rowid,logStream=logstream);            
+        #dcField.trim();
         row[newFields[field]] = dcField.value;
     tempRow = [];
     for field in regarr:
         tempRow.append(row[field]);
     writer.writerow(tempRow);
 
-def dspace(row,regarr,fields,newFields,writer):
+def dspace(row,regarr,fields,newFields,writer,logstream=None,rowid=None):
     for field in fields:
         dcField = dcvalue.DCValue(row[field]);
-        dcField.collapseWhiteSpace();
+        dcCommand = DCCommand(dcField);        
+        command = {
+    					"fname": "collapseWhiteSpace",
+    				};
+        dcCommand.command(command,row,field=field,rowid=rowid,logStream=logstream);
+        #dcField.collapseWhiteSpace();
         row[newFields[field]] = dcField.value;
     tempRow = [];
     for field in regarr:
         tempRow.append(row[field]);
     writer.writerow(tempRow);
 
-def upper(row,regarr,fields,newFields,writer):
+def upper(row,regarr,fields,newFields,writer,logstream=None,rowid=None):
     for field in fields:
         dcField = dcvalue.DCValue(row[field]);
-        dcField.toUpper();
+        dcCommand = DCCommand(dcField);        
+        command = {
+    					"fname": "toUpper",
+    				};
+        dcCommand.command(command,row,field=field,rowid=rowid,logStream=logstream);
+        #dcField.toUpper();
         row[newFields[field]] = dcField.value;
     tempRow = [];
     for field in regarr:
         tempRow.append(row[field]);
     writer.writerow(tempRow);
 
-def lower(row,regarr,fields,newFields,writer):
+def lower(row,regarr,fields,newFields,writer,logstream=None,rowid=None):
     for field in fields:
         dcField = dcvalue.DCValue(row[field]);
-        dcField.toLower();
+        dcCommand = DCCommand(dcField);        
+        command = {
+    					"fname": "toLower",
+    				};
+        dcCommand.command(command,row,field=field,rowid=rowid,logStream=logstream);
+        #dcField.toLower();
         row[newFields[field]] = dcField.value;
     tempRow = [];
     for field in regarr:
@@ -337,6 +366,11 @@ def main(argv):
     @out parsers
     """
     parser = argparse.ArgumentParser(description='Data Cleaning Framework v0.1')
+    
+    # rowid for log provenance
+    parser.add_argument('-rid','--rowid',help='rowid / id if the csv input file contains rowid for log provenance');
+    
+    
     subparsers = parser.add_subparsers(help='sub-command help')
 
     commonIn = {
@@ -574,7 +608,9 @@ def main(argv):
     @in arguments
     @out parsed_args
     """
-    args = parser.parse_args(argv[1:]);                
+    args = parser.parse_args(argv[1:]); 
+    argobj = vars(args)
+    rowid = argobj['rowid'];
     """
     @end parse_args
     """
@@ -618,26 +654,26 @@ def main(argv):
         @out output_file @uri file:{output_file}
         """
         if argv[1]=='id':             
-                    readfile = openReadFile(argobj['infile'],',');    
-                    idwriter = openWriteFile(argobj['outfile']);                                 
-                    start = 1;
-                    field = 'ID';
-                    if(argobj['startid'] is not None):
-                        start = argobj['startid'];
-                    if(argobj['field'] is not None):
-                        field = argobj['field'];
-                    header = readfile['header'];
-                    newheader = [field];
-                    newheader.extend(header);
-                    idwriter.writerow(newheader);
-                    for row in readfile['rows']:                
-                        #group column                
-                        row[field] = start;
-                        temparr = [];
-                        for tempfield in newheader:
-                            temparr.append(row[tempfield]);
-                        idwriter.writerow(temparr);
-                        start = start + 1;                                        
+            readfile = openReadFile(argobj['infile'],',');    
+            idwriter = openWriteFile(argobj['outfile']);                                 
+            start = 1;
+            field = 'ID';
+            if(argobj['startid'] is not None):
+                start = argobj['startid'];
+            if(argobj['field'] is not None):
+                field = argobj['field'];
+            header = readfile['header'];
+            newheader = [field];
+            newheader.extend(header);
+            idwriter.writerow(newheader);
+            for row in readfile['rows']:                
+                #group column                
+                row[field] = start;
+                temparr = [];
+                for tempfield in newheader:
+                    temparr.append(row[tempfield]);
+                idwriter.writerow(temparr);
+                start = start + 1;                                        
 
         """
         @end AddId
@@ -650,7 +686,7 @@ def main(argv):
         @out output_file @uri file:{output_file}
         """
         if argv[1]=='init':             
-                        runConfig(argobj['infile'],argobj['outfile'] ,argobj['config'] );
+            runConfig(argobj['infile'],argobj['outfile'] ,argobj['config'] );
         """
         @end InitClean
         """
@@ -663,13 +699,13 @@ def main(argv):
         """
         
         if argv[1]=='group':             
-                readfile = openReadFile(argobj['infile'],',');
-                groupArr = argobj['fields'].split(',');
-                groupResult = {};
-                for row in readfile['rows']:                
-                    #group column
-                    groupColumn(groupArr,row,groupResult);
-                saveGroupColumn(groupResult,argobj['outfile']);
+            readfile = openReadFile(argobj['infile'],',');
+            groupArr = argobj['fields'].split(',');
+            groupResult = {};
+            for row in readfile['rows']:                
+                #group column
+                groupColumn(groupArr,row,groupResult);
+            saveGroupColumn(groupResult,argobj['outfile']);
         """
         @end AggregateFields
         """
@@ -681,14 +717,14 @@ def main(argv):
         @out output_file
         """
         if argv[1]=='merge':             
-                readfile = openReadFile(argobj['infile'],',');
-                #initialization for group
-                groupArr = argobj['fields'].split(',');
-                groupResult = {};
-                for row in readfile['rows']:                
-                    #group column
-                    groupColumn(groupArr,row,groupResult);
-                mergeGroupColumn(groupResult,argobj['outfile']);
+            readfile = openReadFile(argobj['infile'],',');
+            #initialization for group
+            groupArr = argobj['fields'].split(',');
+            groupResult = {};
+            for row in readfile['rows']:                
+                #group column
+                groupColumn(groupArr,row,groupResult);
+            mergeGroupColumn(groupResult,argobj['outfile']);
         """
         @end MergeField 
         """
@@ -700,108 +736,140 @@ def main(argv):
         @out output_file
         """
         if argv[1]=='select':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for select
-                selectArr = argobj['fields'].split(',');
-                # make new output file
-                selectwriter = openWriteFile(argobj['outfile']);
-                #print header
-                selectwriter.writerow(selectArr);
-                for row in readfile['rows']:                
-                    #group column                        
-                    selectColumn(row,selectArr,selectwriter);
+            readfile = openReadFile(argobj['infile'],',');            
+            #initialization for select
+            selectArr = argobj['fields'].split(',');
+            # make new output file
+            selectwriter = openWriteFile(argobj['outfile']);
+            #print header
+            selectwriter.writerow(selectArr);
+            for row in readfile['rows']:                
+                #group column                        
+                selectColumn(row,selectArr,selectwriter);
         """
         @end SelectField
         """
 
-        if argv[1]=='regexrep':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for regular expression cleaning 
-                regArr = readfile['header'].copy();
-                #make output file                          
-                regWriter = openWriteFile(argobj['outfile']);
-                #define new column
-                newColumn = autoDefineColumn(regArr,argobj['regfield']);
+        #Common Transform                
+        commontransform = ['regexrep','trim','colspace','upper','lower'];
+        if argv[1] in commontransform:        
+            #create logstream for provenance checking
+            logstream = openWriteFile(argobj['outfile']+'.'+time.strftime("%y%m%d%H%M%S")+'.log');    
+            logstream.writerow(['id','field','timestamp','function','oldval','newval']);
+            
+            readfile = openReadFile(argobj['infile'],',');
+            #initialization for regular expression cleaning 
+            regArr = readfile['header'].copy();
+            #make output file                          
+            commonWriter = openWriteFile(argobj['outfile']);
+            #define new column
+            if ('field' in argobj.keys()):
+                newColumn = autoDefineColumn(regArr,argobj['field']);
                 regArr.append(newColumn);
-                #write new header file
-                regWriter.writerow(regArr);
-                #copy row so it won't affect another operation
-                for row in readfile['rows']:                
-                    #replace using horizontal cleaning                                   
-                    regexReplace(row,argobj['pattern'],newColumn,argobj['field'],argobj['replace'],regWriter);
-
-        #trim command        
-        if argv[1]=='trim':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for trim
-                regArr = readfile['header'].copy();                                
-                commonWriter = openWriteFile(argobj['outfile']);
-                #define new column
-                fields = argobj['fields'].split(',');
+            elif ('fields' in argobj.keys()):                
+                fields = argobj['fields'].split(',');                
                 newField = {};
                 for field in fields:
                     newField[field] = autoDefineColumn(regArr,field);
-                    regArr.append(newField[field]);                            
-                #write new header file
-                commonWriter.writerow(regArr);                                                
-                for row in readfile['rows']:                
-                    #trim fields 
-                    trim(row,regArr,fields,newField,commonWriter);
-
-        #collapse white space
-        if argv[1]=='colspace':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for trim
-                regArr = readfile['header'].copy();                                
-                commonWriter = openWriteFile(argobj['outfile']);
-                #define new column
-                fields = argobj['fields'].split(',');
-                newField = {};
-                for field in fields:
-                    newField[field] = autoDefineColumn(regArr,field);
-                    regArr.append(newField[field]);                            
-                #write new header file
-                commonWriter.writerow(regArr);                                                
-                for row in readfile['rows']:                
-                    #collapse white space fields
-                    dspace(row,regArr,fields,newField,commonWriter);                        
-
-        #uper
-        if argv[1]=='upper':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for trim
-                regArr = readfile['header'].copy();                                
-                commonWriter = openWriteFile(argobj['outfile']);
-                #define new column
-                fields = argobj['fields'].split(',');
-                newField = {};
-                for field in fields:
-                    newField[field] = autoDefineColumn(regArr,field);
-                    regArr.append(newField[field]);                            
-                #write new header file
-                commonWriter.writerow(regArr);                                                
-                for row in readfile['rows']:                
-                    #collapse white space fields
-                    upper(row,regArr,fields,newField,commonWriter);                                                                    
-
-        #lower
-        if argv[1]=='lower':
-                readfile = openReadFile(argobj['infile'],',');            
-                #initialization for trim
-                regArr = readfile['header'].copy();                                
-                commonWriter = openWriteFile(argobj['outfile']);
-                #define new column
-                fields = argobj['fields'].split(',');
-                newField = {};
-                for field in fields:
-                    newField[field] = autoDefineColumn(regArr,field);
-                    regArr.append(newField[field]);                            
-                #write new header file
-                commonWriter.writerow(regArr);                                                
-                for row in readfile['rows']:                
-                    #collapse white space fields
-                    lower(row,regArr,fields,newField,commonWriter);                                                                    
-
+                    regArr.append(newField[field]);                                            
+                
+            commonWriter.writerow(regArr);
+            i = 1;
+            for row in readfile['rows']:
+                if rowid is not None :
+                    myid = row[rowid];
+                else:
+                    myid = i;
+                    
+                if argv[1]=='regexrep':
+                        #readfile = openReadFile(argobj['infile'],',');            
+                        #initialization for regular expression cleaning 
+                        #regArr = readfile['header'].copy();
+                        #make output file                          
+                        #regWriter = openWriteFile(argobj['outfile']);
+                        #define new column
+                        #newColumn = autoDefineColumn(regArr,argobj['field']);
+                        #regArr.append(newColumn);
+                        #write new header file
+                        #regWriter.writerow(regArr);
+                        #copy row so it won't affect another operation
+                        #for row in readfile['rows']:
+                            #replace using horizontal cleaning                                   
+                            regexReplace(row,argobj['pattern'],newColumn,argobj['field'],argobj['replace'],commonWriter,logstream,myid);
+                
+                #trim command        
+                if argv[1]=='trim':
+                        #readfile = openReadFile(argobj['infile'],',');            
+                        #initialization for trim
+                        #regArr = readfile['header'].copy();                                
+                        #commonWriter = openWriteFile(argobj['outfile']);
+                        #define new column
+                        #fields = argobj['fields'].split(',');
+                        #newField = {};
+                        #for field in fields:
+                        #    newField[field] = autoDefineColumn(regArr,field);
+                        #    regArr.append(newField[field]);                            
+                        #write new header file
+                        #commonWriter.writerow(regArr);                                                
+                        #for row in readfile['rows']:                
+                            #trim fields 
+                            trim(row,regArr,fields,newField,commonWriter,logstream,myid);
+                
+                #collapse white space
+                if argv[1]=='colspace':
+                        #readfile = openReadFile(argobj['infile'],',');            
+                        #initialization for trim
+                        #regArr = readfile['header'].copy();                                
+                        #commonWriter = openWriteFile(argobj['outfile']);
+                        #define new column
+                        #fields = argobj['fields'].split(',');
+                        #newField = {};
+                        #for field in fields:
+                        #    newField[field] = autoDefineColumn(regArr,field);
+                        #    regArr.append(newField[field]);                            
+                        #write new header file
+                        #commonWriter.writerow(regArr);                                                
+                        #for row in readfile['rows']:                
+                            #collapse white space fields
+                            dspace(row,regArr,fields,newField,commonWriter,logstream,myid);                        
+                
+                #uper
+                if argv[1]=='upper':
+                        #readfile = openReadFile(argobj['infile'],',');            
+                        #initialization for trim
+                        #regArr = readfile['header'].copy();                                
+                        #commonWriter = openWriteFile(argobj['outfile']);
+                        #define new column
+                        #fields = argobj['fields'].split(',');
+                        #newField = {};
+                        #for field in fields:
+                        #    newField[field] = autoDefineColumn(regArr,field);
+                        #    regArr.append(newField[field]);                            
+                        #write new header file
+                        #commonWriter.writerow(regArr);                                                
+                        #for row in readfile['rows']:                
+                            #collapse white space fields
+                            upper(row,regArr,fields,newField,commonWriter,logstream,myid);                                                                    
+                
+                #lower
+                if argv[1]=='lower':
+                        #readfile = openReadFile(argobj['infile'],',');            
+                        #initialization for trim
+                        #regArr = readfile['header'].copy();                                
+                        #commonWriter = openWriteFile(argobj['outfile']);
+                        #define new column
+                        #fields = argobj['fields'].split(',');
+                        #newField = {};
+                        #for field in fields:
+                        #    newField[field] = autoDefineColumn(regArr,field);
+                        #    regArr.append(newField[field]);                            
+                        #write new header file
+                        #commonWriter.writerow(regArr);                                                
+                        #for row in readfile['rows']:                
+                            #collapse white space fields
+                            lower(row,regArr,fields,newField,commonWriter,logstream,myid);
+                i = i + 1;
+    
         #massedit
         """
         @begin MassEdit
@@ -809,74 +877,86 @@ def main(argv):
         @param massedit
         @in open_refine_config_file @uri file:{open_refine_config_file}
         @out output_file @uri file:{output_file}
+        @out log_file @uri file:{outfile_name}.{timestamp}.log
         """
         if argv[1]=='massedit':
-                readfile = openReadFile(argobj['infile'],',');
-                header = readfile['header'].copy();
-                #initialization for trim
-                masseditWriter = openWriteFile(argobj['outfile']);
+            #create logstream for provenance checking
+            logStream = openWriteFile(argobj['outfile']+'.'+time.strftime("%y%m%d%H%M%S")+'.log');    
+            logStream.writerow(['id','field','timestamp','function','oldval','newval']);
+            
+            readfile = openReadFile(argobj['infile'],',');
+            header = readfile['header'].copy();
+            #initialization for trim
+            masseditWriter = openWriteFile(argobj['outfile']);
+            
+            #read json config file
+            with open(argobj['config']) as json_file:
+                jsonConfig = json.load(json_file)
+            
+            if(argobj['newfield'] is not None):
+                newfields = argobj['newfield'].split(',');
+                if(len(newfields)!=len(jsonConfig)):
+                    print("fields defined must be the same as config length, config: %s vs newfield: %s" %(len(jsonConfig),len(newfields)));
+                    return;
                 
-                #read json config file
-                with open(argobj['config']) as json_file:
-                    jsonConfig = json.load(json_file)
-                
-                if(argobj['newfield'] is not None):
-                    newfields = argobj['newfield'].split(',');
-                    if(len(newfields)!=len(jsonConfig)):
-                        print("fields defined must be the same as config length, config: %s vs newfield: %s" %(len(jsonConfig),len(newfields)));
-                        return;
+            #field to replace
+            tempValue = {};
+            i = 0;
+            for row in readfile['rows']:                
+                j = 0;
+                if rowid is not None :
+                    myid = row[rowid];
+                else:
+                    myid = i+1;
                     
-                
-                #field to replace
-                tempValue = {};
-                i = 0;
-                for row in readfile['rows']:                
-                    j = 0;
-                    for config in jsonConfig:
-                        #mass edit only
-                        if(config['op']=="core/mass-edit"):
-                            field = config['columnName'];
-                            if not field in tempValue.keys():                        
-                                if(argobj['newfield'] is None):
-                                    newfield = autoDefineColumn(header,field);
-                                else:
-                                    newfield = newfields[j];
-                                #store newfield value
-                                tempValue[field] = newfield;
-                                header.append(newfield);
-                                #row[newfield] = row[field];
-                                value = row[field];
+                for config in jsonConfig:
+                    #mass edit only
+                    if(config['op']=="core/mass-edit"):
+                        field = config['columnName'];
+                        if not field in tempValue.keys():                                                       
+                            if(argobj['newfield'] is None):
+                                newfield = autoDefineColumn(header,field);
                             else:
-                                newfield = tempValue[field];                                
-                                #row[newfield] = row[field];
-                                if newfield in row.keys():
-                                    value = row[newfield];
-                                else:
-                                    value = row[field];
-                                field = tempValue[field];
-                                
-                            #start fetching                   
-                            #print('field: %s' %(field));
-                            #dcField = dcvalue.DCValue(row[field]);
-                            #fetch massedit config
-                            #row[newfield]=row[field];                            
-                            for edit in config['edits']:
-                                #text must be the same
-                                if value in edit['from']:
-                                    row[newfield]=edit['to'];
-                                    value = row[newfield];
-                                else:
-                                    row[newfield]=value;                                
-                        j = j + 1;
-                    # write header
-                    if i==0:
-                        masseditWriter.writerow(header);
-                    # write row
-                    temprow = [];
-                    for tempField in header:
-                        temprow.append(row[tempField]);
-                    masseditWriter.writerow(temprow);
-                    i = i + 1;
+                                newfield = newfields[j];
+                            #store newfield value
+                            tempValue[field] = newfield;
+                            header.append(newfield);
+                            #row[newfield] = row[field];
+                            value = row[field];
+                        else:
+                            newfield = tempValue[field];                                
+                            #row[newfield] = row[field];
+                            if newfield in row.keys():
+                                value = row[newfield];
+                            else:
+                                value = row[field];
+                            field = tempValue[field];
+                            
+                        #start fetching                   
+                        #print('field: %s' %(field));
+                        #dcField = dcvalue.DCValue(row[field]);
+                        #fetch massedit config
+                        #row[newfield]=row[field];                            
+                        for edit in config['edits']:
+                            #text must be the same
+                            if value in edit['from']:
+                                row[newfield]=edit['to'];
+                                if(value!=edit['to']):
+                                    tempRow = [myid,field,time.strftime("%d/%m/%y %H:%M:%S"),'massedit',value,edit['to']];
+                                    logStream.writerow(tempRow);                                    
+                                value = row[newfield];
+                            else:
+                                row[newfield]=value;                                
+                    j = j + 1;
+                # write header
+                if i==0:
+                    masseditWriter.writerow(header);
+                # write row
+                temprow = [];
+                for tempField in header:
+                    temprow.append(row[tempField]);
+                masseditWriter.writerow(temprow);
+                i = i + 1;
         """
         @end MassEdit
         """
