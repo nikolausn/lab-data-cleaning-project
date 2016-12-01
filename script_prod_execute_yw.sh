@@ -10,6 +10,7 @@
 #@out CleanedDB @uri file:{DBNameOutput}.db
 #@out MergedFile @uri file:{mergedfile}.csv
 #@out ProdTrafficMergedFile
+#@out SqlOutputCsvFiles @uri file:{SqlChecks*.csv}
 
 #@begin Add_Rowid @desc adding rowid from the input file
 #@in TrafficViolationFile
@@ -97,13 +98,18 @@ echo "load lookup value to table"
 ./data-cleaning-framework-yw.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "ArrestType"
 #@end LoadLookupValue
 
+#@begin RunSqlChecks @desc Run sql checks on cleaned database.
+#@in CleanedDB
+#@out SqlOutputCsvFiles @uri file:{SqlChecks*.csv}
+#Run sql checks on cleaned database.
 echo "Perform various checks with Sql and write output to csv files"
 ./data-cleaning-framework-yw.py runsqlscript -in DataTypeChecks.sql -d $3
 ./data-cleaning-framework-yw.py runsqlscript -in SanityChecks.sql -d $3
 ./data-cleaning-framework-yw.py runsqlscript -in ForeignKeyChecks.sql -d $3
 
 echo "Csv files produced with Sql checks."
-ls -l Sql*
+ls -l SqlChecks*.csv
+#@end RunSqlChecks
 
 # cleanup intermediate files.
 rm -rf prodTraffic*
