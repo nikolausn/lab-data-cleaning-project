@@ -354,6 +354,8 @@ def lower(row,regarr,fields,newFields,writer,logstream=None,rowid=None):
 @in input_file @desc input file
 @in init_config_file
 @in open_refine_config_file
+@in input_sql_file
+@in sqlite_database_file
 @param arguments
 @out output_file @desc output file
 @out database_file @desc cleaned_database_file
@@ -1088,12 +1090,21 @@ def main(argv):
                                 print("-------END EXECUTE QUERY-------");
 
         #runsqlscript from shell
+        """
+        @begin RunSqlScript @desc run sql script from shell sqlite3
+        @in input_sql_file
+        @in sqlite_database_file
+        @out output_file
+        """
         if argv[1]=='runsqlscript':
                     sqliteShellCmd = "cat {1} | sqlite3 {0}".format(argobj['database'],argobj['infile'])
                     if (argobj['outfile'] is not None) :
                         sqliteShellCmd = sqliteShellCmd + " > {0}".format(argobj['outfile'])
                     print("Executing command: {0}".format(sqliteShellCmd))
                     subprocess.call(sqliteShellCmd, shell = True)
+        """
+        @end RunSqlScript
+        """
         
 
 """
