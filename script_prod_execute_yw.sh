@@ -97,6 +97,14 @@ echo "load lookup value to table"
 ./data-cleaning-framework-yw.py loadtable -in "prodTraffic.Arrest Type 2" -out $3 -t "ArrestType"
 #@end LoadLookupValue
 
+echo "Perform various checks with Sql and write output to csv files"
+./data-cleaning-framework-yw.py runsqlscript -in DataTypeChecks.sql -d $3
+./data-cleaning-framework-yw.py runsqlscript -in SanityChecks.sql -d $3
+./data-cleaning-framework-yw.py runsqlscript -in ForeignKeyChecks.sql -d $3
+
+echo "Csv files produced with Sql checks."
+ls -l Sql*
+
 # cleanup intermediate files.
 rm -rf prodTraffic*
 #@end main_script
