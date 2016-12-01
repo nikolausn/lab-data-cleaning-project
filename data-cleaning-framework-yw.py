@@ -9,6 +9,7 @@ import sys;
 import sqlite3;
 import os;
 import time;
+import subprocess;
 
 class DCCommand:    
     def __init__(self,dcValue):
@@ -589,6 +590,31 @@ def main(argv):
                     'required': False
                 }
             ]
+        },
+        'runsqlscript': {
+            'help': 'Run sql script to sqlite database defined -d --database. This command uses shell program sqlite3 instead of python library so that users can use features of sqlite3 not provided by python interface.',
+            'argument': [
+                {
+                    'param': '-in',
+                    'longparam': '--infile',
+                    'help': 'file that contains sql script',
+                    'required': True,
+                    'message': 'sqlfile not defined, you must define file containing sql script using -in [sqlscriptfile].'
+                },
+                {
+                    'param': '-d',
+                    'longparam': '--database',
+                    'help': 'sqlite3 database file',
+                    'required': True,
+                    'message': 'you must define database file using -d [database file]'
+                },
+                {
+                    'param': '-out',
+                    'longparam': '--outfile',
+                    'help': 'if present, result of sql script will be redirected to this file.',
+                    'required': False
+                }
+            ]
         }
     }
 
@@ -1060,6 +1086,14 @@ def main(argv):
                                 querywriter.writerow(["-------END EXECUTE QUERY-------"]);
                             else:
                                 print("-------END EXECUTE QUERY-------");
+
+        #runsqlscript from shell
+        if argv[1]=='runsqlscript':
+                    sqliteShellCmd = "cat {1} | sqlite3 {0}".format(argobj['database'],argobj['infile'])
+                    if (argobj['outfile'] is not None) :
+                        sqliteShellCmd = sqliteShellCmd + " > {0}".format(argobj['outfile'])
+                    print("Executing command: {0}".format(sqliteShellCmd))
+                    subprocess.call(sqliteShellCmd, shell = True)
         
 
 """
