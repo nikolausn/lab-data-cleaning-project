@@ -594,7 +594,7 @@ def main(argv):
             ]
         },
         'runsqlscript': {
-            'help': 'Run sql script to sqlite database defined -d --database. This command uses shell program sqlite3 instead of python library so that users can use features of sqlite3 not provided by python interface.',
+            'help': 'Run sql script against sqlite database defined -d --database. This command uses shell program sqlite3 instead of python library so that users can use features of sqlite3 not provided by python interface.',
             'argument': [
                 {
                     'param': '-in',
