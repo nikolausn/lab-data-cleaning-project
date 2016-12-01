@@ -4,7 +4,7 @@
 
 -- Following query is checking if gender is there in the lookup table.
 -- Query returns traffic violation rows for which violator's gender is not in lookup.
-.output SqlCheckFK.ViolateGender.csv
+.output SqlChecksFK.ViolateGender.csv
 SELECT *
 FROM TrafficViolation
 WHERE Gender NOT IN (
@@ -13,7 +13,7 @@ WHERE Gender NOT IN (
 		);
 		
 
-.output SqlCheckFK.ViolateState.csv
+.output SqlChecksFK.ViolateState.csv
 SELECT *
 FROM TrafficViolation
 WHERE State NOT IN (
