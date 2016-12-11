@@ -28,20 +28,21 @@ DCF features are
 
 ## Running the Script for Montgomery Traffic Violation Data
 To run the script for Montgomery Traffic Violation Dataset:
+
 1. Clone this github repository using
 ```
 git clone https://github.com/nikolausn/lab-data-cleaning-project
-```
+``
 2. Make sure you have Python 3.5 installed in your system. 
 3. For the script to automatically called the correct python make sure to make symbolic link to python 3.5 in /usr/local/bin.
 Example of making a symbolic link
 ```
 ln -s /usr/python/anaconda/bin/python3.5 /usr/local/bin/python
 ```
-If by any chance you can make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
+...If by any chance you can make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
 add them in the script_prod_execute_yw.sh for all python scripts call.
 4. download the dataset from [Montgomery Traffic Violation Dataset](https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv?accessType=DOWNLOAD) . 
-Be warned that the original dataset is quite big with more then 800k rows and 35 columns. Another option is using sample data Traffic_Violations.csv 
+...Be warned that the original dataset is quite big with more then 800k rows and 35 columns. Another option is using sample data Traffic_Violations.csv 
 provided in this github with 5,000 rows
 5. run the main batch script using this command
 ```
