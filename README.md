@@ -26,3 +26,23 @@ DCF features are
 	* loadtable: read csv dataset and directly load the dataset into SQLite database file.
 	* runquery: read file that contains sql query and perform select query to the database defined in parameter and output the result into new csv dataset.
 
+## Running the Script for Montgomery Traffic Violation Data
+To run the script for Montgomery Traffic Violation Dataset:
+1. Clone this github repository using git clone https://github.com/nikolausn/lab-data-cleaning-project
+2. Make sure you have Python 3.5 installed in your system. 
+3. For the script to automatically called the correct python make sure to make symbolic link to python 3.5 in /usr/local/bin
+If by any chance you can make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
+add them in the script_prod_execute_yw.sh for all python scripts call.
+4. download the dataset from https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv?accessType=DOWNLOAD . Be warned that
+the original dataset is quite big with more then 800k rows and 35 columns. Another option is using sample data Traffic_Violations.csv 
+provided in this github with 5,000 rows
+5. run the main batch script using this command
+./script_prod_execute_yw.sh <dataset_name> <init_configuration> <output_database_filename>
+For example
+./script_prod_execute_yw.sh Traffic_Violations.csv data-cleaning-config-2.json output_montgomery.sqlite
+
+data-cleaning-config-2.json is a configuration file created for cleaning this Montgomery dataset only.
+
+If you use the original dataset, execution time for the whole batch process to finish is approximately within 35 to 40 minutes.
+so be patient :D, cleaning process is tedious if you run it manually :)
+
