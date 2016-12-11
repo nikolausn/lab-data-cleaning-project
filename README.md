@@ -35,12 +35,13 @@ git clone https://github.com/nikolausn/lab-data-cleaning-project
 ```
 
 2. Make sure you have Python 3.5 installed in your system.
+
 3. For the script to automatically called the correct python make sure to make symbolic link to python 3.5 in /usr/local/bin.
 Example of making a symbolic link
 ```
 ln -s /usr/python/anaconda/bin/python3.5 /usr/local/bin/python
 ```
-If by any chance you can't make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
+...If by any chance you can't make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
 add them in the script_prod_execute_yw.sh for all python scripts call.
 
 4. Download the dataset from [Montgomery Traffic Violation Dataset](https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv?accessType=DOWNLOAD) . 
@@ -58,5 +59,6 @@ For example
 data-cleaning-config-2.json is a configuration file created for cleaning this Montgomery dataset only.
 
 If you use the original dataset, execution time for the whole batch process to finish is approximately within 35 to 40 minutes.
-so be patient :D, cleaning process is tedious if you run it manually :)
+
+So be patient :D, cleaning process is tedious if you run it manually :)
 
