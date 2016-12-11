@@ -41,8 +41,8 @@ Example of making a symbolic link
 ```
 ln -s /usr/python/anaconda/bin/python3.5 /usr/local/bin/python
 ```
-.. If by any chance you can't make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
-add them in the script_prod_execute_yw.sh for all python scripts call.
+... If by any chance you can't make the symbolic link then you can run the script by calling the python3.5 executable first for single call or
+add them in the script_prod_execute_yw.sh for all python scripts call..
 
 4. Download the dataset from [Montgomery Traffic Violation Dataset](https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv?accessType=DOWNLOAD) . 
 Be warned that the original dataset is quite big with more then 800k rows and 35 columns. Another option is using sample data Traffic_Violations.csv 
