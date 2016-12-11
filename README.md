@@ -32,7 +32,7 @@ To run the script for Montgomery Traffic Violation Dataset:
 1. Clone this github repository using
 ```
 git clone https://github.com/nikolausn/lab-data-cleaning-project
-``
+```
 2. Make sure you have Python 3.5 installed in your system. 
 3. For the script to automatically called the correct python make sure to make symbolic link to python 3.5 in /usr/local/bin.
 Example of making a symbolic link
