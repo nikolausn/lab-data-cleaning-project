@@ -2,4 +2,5 @@ test
 testtwo
 test*
 prod*
+SqlChecks*
 __pycache__
